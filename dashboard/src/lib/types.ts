@@ -1,5 +1,7 @@
 export type UserRole = "admin" | "client" | "member"
 
+export type MemberRole = "gestor" | "analista" | "funcionario" | "visualizador"
+
 export interface User {
   id: string
   name: string
@@ -7,6 +9,8 @@ export interface User {
   role: UserRole
   client_id?: string
   assigned_clients?: string[]
+  member_role?: MemberRole
+  permissions?: string[]
   created_at: string
   updated_at: string
   last_login?: string

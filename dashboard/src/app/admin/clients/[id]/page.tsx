@@ -1,23 +1,71 @@
 "use client"
 
+import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { Building2, Globe, MapPin, Target, ExternalLink, Edit, ArrowLeft, TrendingUp, DollarSign, Users, Activity, AtSign } from "lucide-react"
+import {
+  Building2,
+  Globe,
+  MapPin,
+  ExternalLink,
+  Edit,
+  ArrowLeft,
+  TrendingUp,
+  DollarSign,
+  Users,
+  Activity,
+  AtSign,
+  Clock,
+  AlertTriangle,
+} from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MetricCard } from "@/components/dashboard/metric-card"
-import { mockClients, mockReports, mockPaidMedia, mockFinancial, mockFunnel, mockActionPlans } from "@/lib/mock-data"
+import {
+  mockClients,
+  mockReports,
+  mockPaidMedia,
+  mockFinancial,
+  mockFunnel,
+  mockActionPlans,
+  mockUsers,
+} from "@/lib/mock-data"
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/lib/utils"
+
+const CLIENT_ACTIVITY: Record<string, Array<{ time: string; user: string; action: string }>> = {
+  c1: [
+    { time: "Hoje 09:15", user: "Maria Santos", action: "Publicou plano de ação" },
+    { time: "Hoje 08:30", user: "Admin", action: "Criou novo relatório" },
+    { time: "Ontem 17:45", user: "João Ferreira", action: "Importou dados Meta Ads" },
+    { time: "Ontem 14:20", user: "Maria Santos", action: "Comentou no plano de ação" },
+    { time: "Seg 11:00", user: "Admin", action: "Atualizou informações do cliente" },
+  ],
+}
+
+const DEFAULT_ACTIVITY = [
+  { time: "Hoje 10:00", user: "Admin", action: "Visualizou perfil do cliente" },
+  { time: "Ontem 15:30", user: "Admin", action: "Atualizou dados cadastrais" },
+  { time: "Seg 09:00", user: "Admin", action: "Criou registro do cliente" },
+]
 
 export default function AdminClientDetailPage() {
   const params = useParams()
   const id = params.id as string
 
+  const [internalNote, setInternalNote] = useState(
+    "Cliente preferencial — negociar renovação até junho. Ticket médio acima da média da carteira."
+  )
+  const [noteSaved, setNoteSaved] = useState(false)
+
   const client = mockClients.find((c) => c.id === id)
   const clientReports = mockReports.filter((r) => r.client_id === id)
   const clientActions = mockActionPlans.filter((a) => a.client_id === id)
+  const responsaveis = mockUsers.filter(
+    (u) => u.role === "member" && u.assigned_clients?.includes(id)
+  )
+  const activityFeed = CLIENT_ACTIVITY[id] || DEFAULT_ACTIVITY
 
   if (!client) {
     return (
@@ -43,6 +91,11 @@ export default function AdminClientDetailPage() {
 
   const pendingActions = clientActions.filter((a) => a.status === "pendente").length
   const completedActions = clientActions.filter((a) => a.status === "concluído").length
+
+  function handleSaveNote() {
+    setNoteSaved(true)
+    setTimeout(() => setNoteSaved(false), 2000)
+  }
 
   return (
     <div>
@@ -73,7 +126,7 @@ export default function AdminClientDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/client/dashboard`}>
+            <Link href="/client/dashboard">
               <ExternalLink className="h-4 w-4" />
               Ver como Cliente
             </Link>
@@ -88,10 +141,10 @@ export default function AdminClientDetailPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <MetricCard title="Total Investido" value={totalSpend} format="currency" rawValue={totalSpend} />
-        <MetricCard title="Total de Leads" value={totalLeads} format="number" rawValue={totalLeads} />
-        <MetricCard title="ROAS" value={financial ? `${financial.roas?.toFixed(2)}x` : "—"} rawValue={financial?.roas || 0} />
-        <MetricCard title="Vendas" value={financial?.sales_count || 0} format="number" rawValue={financial?.sales_count || 0} />
+        <MetricCard title="Total Investido" value={totalSpend} format="currency" />
+        <MetricCard title="Total de Leads" value={totalLeads} format="number" />
+        <MetricCard title="ROAS" value={financial ? `${financial.roas?.toFixed(2)}x` : "—"} format="raw" />
+        <MetricCard title="Vendas" value={financial?.sales_count || 0} format="number" />
       </div>
 
       <Tabs defaultValue="overview">
@@ -100,10 +153,22 @@ export default function AdminClientDetailPage() {
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
           <TabsTrigger value="metrics">Métricas</TabsTrigger>
           <TabsTrigger value="data">Dados do Cliente</TabsTrigger>
+          <TabsTrigger value="internal">Dados Internos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <MetricCard title="Investimento em Mídia" value={financial?.media_spend || totalSpend} format="currency" />
+            <MetricCard title="Leads Gerados" value={totalLeads} format="number" />
+            <MetricCard title="Vendas" value={financial?.sales_count || 0} format="number" />
+            <MetricCard title="ROAS" value={financial ? `${financial.roas?.toFixed(2)}x` : "—"} format="raw" />
+            <MetricCard title="ROI" value={financial?.roi || 0} format="percent" />
+            <MetricCard title="CPL" value={financial ? (financial.media_spend / totalLeads) : 0} format="currency" />
+            <MetricCard title="CAC" value={financial?.cac || 0} format="currency" />
+            <MetricCard title="LTV" value={financial?.ltv || 0} format="currency" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader>
                 <CardTitle>Plano de Ação</CardTitle>
@@ -164,33 +229,59 @@ export default function AdminClientDetailPage() {
                 </CardContent>
               </Card>
             )}
+          </div>
 
-            {financial && (
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Resumo Financeiro</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {[
-                      { label: "Investimento em Mídia", value: formatCurrency(financial.media_spend), icon: DollarSign },
-                      { label: "Receita Gerada", value: formatCurrency(financial.revenue || 0), icon: TrendingUp },
-                      { label: "ROAS", value: `${financial.roas?.toFixed(2)}x`, icon: Activity },
-                      { label: "ROI", value: `${financial.roi}%`, icon: Activity },
-                      { label: "Ticket Médio", value: formatCurrency(financial.average_ticket || 0), icon: DollarSign },
-                      { label: "CAC", value: formatCurrency(financial.cac || 0), icon: Users },
-                      { label: "LTV", value: formatCurrency(financial.ltv || 0), icon: TrendingUp },
-                      { label: "Margem", value: formatPercent(financial.margin || 0), icon: Activity },
-                    ].map((item) => (
-                      <div key={item.label} className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 mb-1">{item.label}</p>
-                        <p className="font-bold text-gray-900">{item.value}</p>
-                      </div>
-                    ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Responsáveis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {responsaveis.length === 0 ? (
+                  <p className="text-sm text-gray-500">Nenhum responsável atribuído.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {responsaveis.map((u) => {
+                      const memberRole = (u as { member_role?: string }).member_role || "membro"
+                      return (
+                        <div key={u.id} className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center shrink-0">
+                            <span className="text-white text-xs font-semibold">{u.name.charAt(0)}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900">{u.name}</p>
+                            <p className="text-xs text-gray-500">{u.email}</p>
+                          </div>
+                          <Badge variant="secondary" className="capitalize">{memberRole}</Badge>
+                        </div>
+                      )
+                    })}
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Última Atividade</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {activityFeed.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                      <Clock className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900">
+                        <span className="font-medium">{item.user}</span>{" "}
+                        <span className="text-gray-600">{item.action}</span>
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
@@ -337,6 +428,87 @@ export default function AdminClientDetailPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="internal">
+          <div className="space-y-6">
+            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-sm font-medium text-amber-800">
+                Essas informações são visíveis apenas para administradores.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informações Contratuais</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { label: "Fee Mensal", value: "R$ 2.500,00/mês" },
+                    { label: "Contrato Desde", value: "01/01/2024" },
+                    { label: "Próximo Vencimento", value: "01/01/2025" },
+                    { label: "Modalidade", value: "Gestão de Tráfego + Estratégia" },
+                    { label: "Renovação Automática", value: "Sim" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between text-sm border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                      <span className="text-gray-500">{item.label}</span>
+                      <span className="font-medium text-gray-900">{item.value}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Margem da Agência</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[
+                    { label: "Receita do Cliente", value: formatCurrency(financial?.revenue || 30600), highlight: false },
+                    { label: "Custo de Mídia", value: formatCurrency(financial?.media_spend || 7000), highlight: false },
+                    { label: "Fee da Agência", value: "R$ 2.500,00", highlight: false },
+                    { label: "Custo Total", value: formatCurrency((financial?.media_spend || 7000) + 2500), highlight: false },
+                    {
+                      label: "Margem Líquida",
+                      value: `${financial?.margin?.toFixed(1) || "70.6"}%`,
+                      highlight: true,
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className={`flex items-center justify-between text-sm border-b border-gray-100 pb-3 last:border-0 last:pb-0 ${item.highlight ? "font-semibold" : ""}`}
+                    >
+                      <span className={item.highlight ? "text-gray-900" : "text-gray-500"}>{item.label}</span>
+                      <span className={item.highlight ? "text-emerald-600 text-base" : "text-gray-900"}>{item.value}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Notas Internas</CardTitle>
+                <CardDescription>Visível apenas para a equipe da agência</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <textarea
+                  className="w-full min-h-[120px] rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+                  value={internalNote}
+                  onChange={(e) => setInternalNote(e.target.value)}
+                  placeholder="Adicione notas internas sobre este cliente..."
+                />
+                <div className="flex items-center gap-3">
+                  <Button onClick={handleSaveNote}>Salvar</Button>
+                  {noteSaved && (
+                    <span className="text-sm text-emerald-600 font-medium">Nota salva!</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

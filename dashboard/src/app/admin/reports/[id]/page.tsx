@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { FileBarChart, ArrowLeft, Download, Edit, TrendingUp, AlertTriangle, CheckCircle2, ArrowRight } from "lucide-react"
+import { FileBarChart, ArrowLeft, Printer, Edit, TrendingUp, AlertTriangle, CheckCircle2, ArrowRight, Download } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -47,7 +47,7 @@ export default function AdminReportDetailPage() {
   const avgROAS = metrics.length > 0 ? metrics.reduce((s, m) => s + (m.roas || 0), 0) / metrics.length : 0
 
   function exportPDF() {
-    window.print()
+    window.open(`/admin/reports/${id}/print`, "_blank")
   }
 
   return (
@@ -94,8 +94,8 @@ export default function AdminReportDetailPage() {
             </Link>
           </Button>
           <Button onClick={exportPDF}>
-            <Download className="h-4 w-4" />
-            Exportar PDF
+            <Printer className="h-4 w-4" />
+            Exportar PDF Profissional
           </Button>
         </div>
       </div>

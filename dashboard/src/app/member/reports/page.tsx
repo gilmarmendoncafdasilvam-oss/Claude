@@ -94,7 +94,7 @@ export default function MemberReportsPage() {
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-1">
                     <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/admin/reports/${report.id}`}>
+                      <Link href={`/member/reports/${report.id}`}>
                         <Eye className="h-3.5 w-3.5" />
                       </Link>
                     </Button>

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { UserCircle, Shield, User, Building2, ArrowLeft, Key, Trash2, Save, Plus, X } from "lucide-react"
+import { UserCircle, Shield, User, Building2, ArrowLeft, Key, Trash2, Save, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { mockUsers, mockClients } from "@/lib/mock-data"
 import { formatDate } from "@/lib/utils"
 import type { UserRole } from "@/lib/types"
+import { ROLE_PERMISSIONS, ROLE_LABELS, PERMISSION_LABELS, type MemberRole, type MemberPermission } from "@/lib/permissions"
 
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
@@ -38,11 +39,44 @@ export default function AdminUserDetailPage() {
   const [email, setEmail] = useState(user?.email || "")
   const [role, setRole] = useState<UserRole>(user?.role || "member")
   const [assignedClients, setAssignedClients] = useState<string[]>(user?.assigned_clients || [])
+  const [memberRole, setMemberRole] = useState<MemberRole | "">(
+    (user?.member_role as MemberRole) || ""
+  )
+  const [selectedPermissions, setSelectedPermissions] = useState<MemberPermission[]>(
+    (user?.permissions as MemberPermission[]) || []
+  )
+  const [permissionsSaved, setPermissionsSaved] = useState(false)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [newPassword, setNewPassword] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [saved, setSaved] = useState(false)
   const [passwordSaved, setPasswordSaved] = useState(false)
+
+  function handleMemberRoleChange(newMemberRole: MemberRole) {
+    setMemberRole(newMemberRole)
+    setSelectedPermissions(ROLE_PERMISSIONS[newMemberRole])
+  }
+
+  function togglePermission(permission: MemberPermission) {
+    setSelectedPermissions((prev) =>
+      prev.includes(permission) ? prev.filter((p) => p !== permission) : [...prev, permission]
+    )
+  }
+
+  function handleSavePermissions() {
+    setPermissionsSaved(true)
+    setTimeout(() => setPermissionsSaved(false), 2000)
+  }
+
+  const permissionGroups: { label: string; permissions: MemberPermission[] }[] = [
+    { label: "Clientes", permissions: ["clients.view", "clients.create", "clients.edit", "clients.delete"] },
+    { label: "Relatórios", permissions: ["reports.view", "reports.create", "reports.edit", "reports.delete"] },
+    { label: "Planos de Ação", permissions: ["action_plans.view", "action_plans.edit", "action_plans.publish"] },
+    { label: "Usuários", permissions: ["users.view", "users.create", "users.edit", "users.delete"] },
+    { label: "Integrações", permissions: ["integrations.view", "integrations.manage"] },
+    { label: "Configurações", permissions: ["settings.view", "settings.edit"] },
+    { label: "Dados", permissions: ["data.import", "data.export"] },
+  ]
 
   if (!user) {
     return (
@@ -243,6 +277,65 @@ export default function AdminUserDetailPage() {
                     </Select>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {(role === "member" || user.role === "member") && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Permissões & Cargo</CardTitle>
+                <CardDescription>Cargo e permissões deste membro no sistema</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="space-y-1.5">
+                  <Label>Cargo</Label>
+                  <Select
+                    value={memberRole}
+                    onValueChange={(v) => handleMemberRoleChange(v as MemberRole)}
+                  >
+                    <SelectTrigger className="max-w-xs">
+                      <SelectValue placeholder="Selecionar cargo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(ROLE_LABELS) as MemberRole[]).map((r) => (
+                        <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-gray-700">Permissões individuais</p>
+                  {permissionGroups.map((group) => (
+                    <div key={group.label}>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{group.label}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {group.permissions.map((perm) => (
+                          <label key={perm} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedPermissions.includes(perm)}
+                              onChange={() => togglePermission(perm)}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                            />
+                            <span className="text-sm text-gray-700">{PERMISSION_LABELS[perm]}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end pt-2">
+                  <Button onClick={handleSavePermissions} disabled={permissionsSaved}>
+                    <Save className="h-4 w-4" />
+                    {permissionsSaved ? "Salvo!" : "Salvar Permissões"}
+                  </Button>
+                </div>
+                {permissionsSaved && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-sm text-emerald-700 text-center">
+                    Permissões atualizadas com sucesso!
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}

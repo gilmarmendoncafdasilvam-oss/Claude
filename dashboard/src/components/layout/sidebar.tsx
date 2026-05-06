@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Settings,
   BarChart3,
+  Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -37,6 +38,7 @@ const adminNav: NavItem[] = [
   { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/reports", label: "Relatórios", icon: FileBarChart },
   { href: "/admin/import", label: "Importar Dados", icon: Upload },
+  { href: "/admin/integrations", label: "Integrações", icon: Zap },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
 ]
 
