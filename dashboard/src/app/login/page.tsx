@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 
 const DEMO_USERS = [
   { email: "admin@agencia.com", password: "admin123", role: "admin", name: "Admin Agência" },
+  { email: "maria@agencia.com", password: "membro123", role: "member", name: "Maria Santos" },
+  { email: "joao@agencia.com", password: "membro123", role: "member", name: "João Ferreira" },
   { email: "carlos@saudetotal.com.br", password: "cliente123", role: "client", name: "Dr. Carlos Mendes", clientId: "c1" },
   { email: "ana@corpoemforma.com.br", password: "cliente123", role: "client", name: "Ana Lima", clientId: "c2" },
 ]
@@ -43,6 +45,8 @@ export default function LoginPage() {
 
     if (user.role === "admin") {
       router.push("/admin")
+    } else if (user.role === "member") {
+      router.push("/member")
     } else {
       router.push("/client/dashboard")
     }
@@ -163,6 +167,10 @@ export default function LoginPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Admin:</span>
                 <code className="bg-gray-200 px-2 py-0.5 rounded text-gray-700">admin@agencia.com / admin123</code>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">Membro:</span>
+                <code className="bg-gray-200 px-2 py-0.5 rounded text-gray-700">maria@agencia.com / membro123</code>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Cliente:</span>

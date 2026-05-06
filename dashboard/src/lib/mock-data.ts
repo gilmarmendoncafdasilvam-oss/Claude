@@ -1,5 +1,6 @@
 import type {
   Client,
+  User,
   Report,
   PaidMediaMetrics,
   GoogleAdsMetrics,
@@ -367,6 +368,9 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-10",
     responsible: "Equipe Comercial",
     status: "pendente",
+    published_to_client: true,
+    validated: true,
+    comments: "Verificado e aprovado.",
   },
   {
     id: "ap2",
@@ -378,6 +382,8 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-07",
     responsible: "Gestor de Tráfego",
     status: "em andamento",
+    published_to_client: true,
+    validated: true,
   },
   {
     id: "ap3",
@@ -389,6 +395,8 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-07",
     responsible: "Gestor de Tráfego",
     status: "concluído",
+    published_to_client: true,
+    validated: true,
   },
   {
     id: "ap4",
@@ -400,6 +408,7 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-15",
     responsible: "Equipe Criativa",
     status: "pendente",
+    published_to_client: false,
   },
   {
     id: "ap5",
@@ -411,6 +420,7 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-12",
     responsible: "Gestora Comercial",
     status: "pendente",
+    published_to_client: false,
   },
   {
     id: "ap6",
@@ -422,6 +432,7 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-20",
     responsible: "Dev / Designer",
     status: "pendente",
+    published_to_client: false,
   },
   {
     id: "ap7",
@@ -433,6 +444,7 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-09",
     responsible: "Gestor de Tráfego",
     status: "concluído",
+    published_to_client: false,
   },
   {
     id: "ap8",
@@ -444,6 +456,7 @@ export const mockActionPlans: ActionPlan[] = [
     deadline: "2024-05-14",
     responsible: "Gestor de Tráfego",
     status: "pendente",
+    published_to_client: false,
   },
 ]
 
@@ -472,35 +485,54 @@ export const mockChartData = {
   ],
 }
 
-export const mockUsers = [
+export const mockUsers: User[] = [
   {
     id: "u1",
     name: "Admin Agência",
     email: "admin@agencia.com",
-    role: "admin" as const,
-    client_id: undefined,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-05-01T00:00:00Z",
-    last_login: "2024-05-06T09:00:00Z",
+    role: "admin",
+    created_at: "2024-01-01T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+    last_login: "2024-05-06T08:00:00Z",
   },
   {
     id: "u2",
-    name: "Dr. Carlos Mendes",
-    email: "carlos@saudetotal.com.br",
-    role: "client" as const,
-    client_id: "c1",
-    created_at: "2024-01-15T00:00:00Z",
-    updated_at: "2024-05-01T00:00:00Z",
-    last_login: "2024-05-05T14:30:00Z",
+    name: "Maria Santos",
+    email: "maria@agencia.com",
+    role: "member",
+    created_at: "2024-02-01T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+    last_login: "2024-05-05T16:00:00Z",
+    assigned_clients: ["c1", "c2"],
   },
   {
     id: "u3",
+    name: "João Ferreira",
+    email: "joao@agencia.com",
+    role: "member",
+    created_at: "2024-03-01T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+    last_login: "2024-05-04T14:00:00Z",
+    assigned_clients: ["c3"],
+  },
+  {
+    id: "u4",
+    name: "Dr. Carlos Mendes",
+    email: "carlos@saudetotal.com.br",
+    role: "client",
+    client_id: "c1",
+    created_at: "2024-01-20T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+    last_login: "2024-05-03T10:00:00Z",
+  },
+  {
+    id: "u5",
     name: "Ana Lima",
     email: "ana@corpoemforma.com.br",
-    role: "client" as const,
+    role: "client",
     client_id: "c2",
-    created_at: "2024-02-10T00:00:00Z",
-    updated_at: "2024-05-01T00:00:00Z",
-    last_login: "2024-05-04T11:00:00Z",
+    created_at: "2024-02-15T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+    last_login: "2024-05-02T09:00:00Z",
   },
 ]

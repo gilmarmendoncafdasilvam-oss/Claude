@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "client"
+export type UserRole = "admin" | "client" | "member"
 
 export interface User {
   id: string
@@ -6,6 +6,7 @@ export interface User {
   email: string
   role: UserRole
   client_id?: string
+  assigned_clients?: string[]
   created_at: string
   updated_at: string
   last_login?: string
@@ -275,6 +276,9 @@ export interface ActionPlan {
   deadline?: string
   responsible?: string
   status: ActionStatus
+  comments?: string
+  published_to_client?: boolean
+  validated?: boolean
 }
 
 export interface DashboardMetrics {
