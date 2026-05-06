@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { MetricCard } from "@/components/dashboard/metric-card"
 import { LineChart } from "@/components/charts/line-chart"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { mockFinancial, mockChartData } from "@/lib/mock-data"
 import { formatCurrency, formatPercent } from "@/lib/utils"
 
@@ -11,13 +13,38 @@ const fin = mockFinancial
 
 const hasRevenue = fin.revenue && fin.revenue > 0
 
+const presetLabels: Record<string, string> = {
+  "2024-04-01|2024-04-30": "Abril 2024",
+  "2024-03-01|2024-03-31": "Março 2024",
+  "2024-01-01|2024-03-31": "Último trimestre",
+}
+
 export default function FinancialPage() {
+  const [startDate, setStartDate] = useState("2024-04-01")
+  const [endDate, setEndDate] = useState("2024-04-30")
+
+  const periodKey = `${startDate}|${endDate}`
+  const periodLabel = presetLabels[periodKey]
+  const isDefaultPeriod = periodKey === "2024-04-01|2024-04-30"
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Análise Financeira</h1>
-        <p className="text-gray-500 mt-1">Retorno sobre investimento, CAC, ROAS e rentabilidade</p>
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Análise Financeira</h1>
+          <p className="text-gray-500 mt-1">Retorno sobre investimento, CAC, ROAS e rentabilidade</p>
+        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(s, e) => { setStartDate(s); setEndDate(e) }}
+        />
       </div>
+      {!isDefaultPeriod && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 text-sm text-blue-700">
+          Exibindo dados de {periodLabel || `${startDate} – ${endDate}`}. Para ver dados de outro período, importe os dados correspondentes.
+        </div>
+      )}
 
       {!hasRevenue && (
         <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl mb-6">

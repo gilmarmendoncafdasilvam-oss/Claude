@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Download, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { MetricCard } from "@/components/dashboard/metric-card"
 import { LineChart } from "@/components/charts/line-chart"
 import { BarChart } from "@/components/charts/bar-chart"
 import { PieChart } from "@/components/charts/pie-chart"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 import {
   mockReports, mockPaidMedia, mockFinancial, mockFunnel, mockDiagnostic, mockActionPlans, mockChartData,
 } from "@/lib/mock-data"
@@ -31,7 +33,20 @@ const alertItems = [
   { type: "success", icon: CheckCircle2, message: "Google Ads com CTR de 4% — acima da média do setor (2,5%).", area: "Google Ads" },
 ]
 
+const presetLabels: Record<string, string> = {
+  "2024-04-01|2024-04-30": "Abril 2024",
+  "2024-03-01|2024-03-31": "Março 2024",
+  "2024-01-01|2024-03-31": "Último trimestre",
+}
+
 export default function ClientDashboardPage() {
+  const [startDate, setStartDate] = useState("2024-04-01")
+  const [endDate, setEndDate] = useState("2024-04-30")
+
+  const periodKey = `${startDate}|${endDate}`
+  const periodLabel = presetLabels[periodKey]
+  const isDefaultPeriod = periodKey === "2024-04-01|2024-04-30"
+
   function exportPDF() {
     window.print()
   }
@@ -39,7 +54,7 @@ export default function ClientDashboardPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Clínica Saúde Total</h1>
           <p className="text-gray-500 mt-1">{report.title}</p>
@@ -50,11 +65,24 @@ export default function ClientDashboardPage() {
             </span>
           </div>
         </div>
-        <Button variant="outline" onClick={exportPDF} className="gap-2 shrink-0">
-          <Download className="h-4 w-4" />
-          Exportar PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(s, e) => { setStartDate(s); setEndDate(e) }}
+          />
+          <Button variant="outline" onClick={exportPDF} className="gap-2 shrink-0">
+            <Download className="h-4 w-4" />
+            Exportar PDF
+          </Button>
+        </div>
       </div>
+
+      {!isDefaultPeriod && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 text-sm text-blue-700">
+          Exibindo dados de {periodLabel || `${startDate} – ${endDate}`}. Para ver dados de outro período, importe os dados correspondentes.
+        </div>
+      )}
 
       {/* Executive Summary */}
       {report.executive_summary && (

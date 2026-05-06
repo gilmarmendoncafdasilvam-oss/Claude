@@ -1,8 +1,10 @@
 "use client"
 
+import { useState } from "react"
 import { AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { MetricCard } from "@/components/dashboard/metric-card"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { mockFunnel } from "@/lib/mock-data"
 import { formatNumber, formatPercent, formatCurrency } from "@/lib/utils"
 
@@ -23,13 +25,38 @@ const stages = [
 
 const maxValue = stages[0].value
 
+const presetLabels: Record<string, string> = {
+  "2024-04-01|2024-04-30": "Abril 2024",
+  "2024-03-01|2024-03-31": "Março 2024",
+  "2024-01-01|2024-03-31": "Último trimestre",
+}
+
 export default function FunnelPage() {
+  const [startDate, setStartDate] = useState("2024-04-01")
+  const [endDate, setEndDate] = useState("2024-04-30")
+
+  const periodKey = `${startDate}|${endDate}`
+  const periodLabel = presetLabels[periodKey]
+  const isDefaultPeriod = periodKey === "2024-04-01|2024-04-30"
+
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Funil de Conversão</h1>
-        <p className="text-gray-500 mt-1">Visão completa de impressões até receita gerada</p>
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Funil de Conversão</h1>
+          <p className="text-gray-500 mt-1">Visão completa de impressões até receita gerada</p>
+        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(s, e) => { setStartDate(s); setEndDate(e) }}
+        />
       </div>
+      {!isDefaultPeriod && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4 text-sm text-blue-700">
+          Exibindo dados de {periodLabel || `${startDate} – ${endDate}`}. Para ver dados de outro período, importe os dados correspondentes.
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <MetricCard title="Impressões" value={fn.impressions} format="number" />

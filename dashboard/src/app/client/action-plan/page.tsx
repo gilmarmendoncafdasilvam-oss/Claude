@@ -25,12 +25,15 @@ export default function ActionPlanPage() {
   const [copied, setCopied] = useState(false)
   const report = mockReports[0]
 
-  const alta = mockActionPlans.filter((a) => a.priority === "alta")
-  const media = mockActionPlans.filter((a) => a.priority === "média")
-  const baixa = mockActionPlans.filter((a) => a.priority === "baixa")
+  const publishedPlans = mockActionPlans.filter((a) => a.published_to_client === true)
+  const displayPlans = publishedPlans.length > 0 ? publishedPlans : mockActionPlans
 
-  const completed = mockActionPlans.filter((a) => a.status === "concluído").length
-  const total = mockActionPlans.length
+  const alta = displayPlans.filter((a) => a.priority === "alta")
+  const media = displayPlans.filter((a) => a.priority === "média")
+  const baixa = displayPlans.filter((a) => a.priority === "baixa")
+
+  const completed = displayPlans.filter((a) => a.status === "concluído").length
+  const total = displayPlans.length
 
   const whatsappMessage = `📊 *Visão Geral — Clínica Saúde Total*
 
@@ -91,6 +94,15 @@ O relatório completo está disponível no dashboard.`
 
   return (
     <div>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-700">
+        Estas são as ações validadas e publicadas pela equipe da agência para este período.
+        {publishedPlans.length === 0 && (
+          <span className="block mt-1 text-blue-600 font-medium">
+            Nenhum plano publicado ainda — aguardando revisão da equipe.
+          </span>
+        )}
+      </div>
+
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Plano de Ação</h1>
@@ -106,9 +118,9 @@ O relatório completo está disponível no dashboard.`
       {/* Progress */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: "Concluídas", count: mockActionPlans.filter((a) => a.status === "concluído").length, color: "text-emerald-600" },
-          { label: "Em Andamento", count: mockActionPlans.filter((a) => a.status === "em andamento").length, color: "text-blue-600" },
-          { label: "Pendentes", count: mockActionPlans.filter((a) => a.status === "pendente").length, color: "text-gray-600" },
+          { label: "Concluídas", count: displayPlans.filter((a) => a.status === "concluído").length, color: "text-emerald-600" },
+          { label: "Em Andamento", count: displayPlans.filter((a) => a.status === "em andamento").length, color: "text-blue-600" },
+          { label: "Pendentes", count: displayPlans.filter((a) => a.status === "pendente").length, color: "text-gray-600" },
         ].map((stat) => (
           <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-4 text-center">
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.count}</p>
@@ -119,7 +131,7 @@ O relatório completo está disponível no dashboard.`
 
       <Tabs defaultValue="all">
         <TabsList className="mb-4">
-          <TabsTrigger value="all">Todas ({total})</TabsTrigger>
+          <TabsTrigger value="all">Todas ({displayPlans.length})</TabsTrigger>
           <TabsTrigger value="alta">🔴 Alta ({alta.length})</TabsTrigger>
           <TabsTrigger value="media">🟡 Média ({media.length})</TabsTrigger>
           <TabsTrigger value="baixa">🔵 Baixa ({baixa.length})</TabsTrigger>
