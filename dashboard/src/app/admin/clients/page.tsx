@@ -47,7 +47,8 @@ export default function ClientsPage() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-gray-100">
+          <div className="overflow-x-auto">
+          <div className="divide-y divide-gray-100 min-w-[640px]">
             <div className="grid grid-cols-12 px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50">
               <span className="col-span-4">Empresa</span>
               <span className="col-span-3">Segmento</span>
@@ -97,6 +98,7 @@ export default function ClientsPage() {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </CardContent>
       </Card>

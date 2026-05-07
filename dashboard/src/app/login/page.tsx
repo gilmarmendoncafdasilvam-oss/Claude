@@ -7,6 +7,9 @@ import { BarChart3, Eye, EyeOff, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { mockUsers } from "@/lib/mock-data"
+import { ROLE_PERMISSIONS } from "@/lib/permissions"
+import type { MemberRole } from "@/lib/types"
 
 const DEMO_USERS = [
   { email: "admin@agencia.com", password: "admin123", role: "admin", name: "Admin Agência" },
@@ -40,7 +43,16 @@ export default function LoginPage() {
     }
 
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("user", JSON.stringify(user))
+      const mockUser = mockUsers.find((u) => u.email === user.email)
+      const memberRole = mockUser?.member_role as MemberRole | undefined
+      const sessionUser = {
+        ...user,
+        permissions: mockUser?.permissions ?? (memberRole ? ROLE_PERMISSIONS[memberRole] : []),
+        assigned_clients: mockUser?.assigned_clients ?? [],
+        member_role: memberRole ?? "",
+        id: mockUser?.id ?? "",
+      }
+      sessionStorage.setItem("user", JSON.stringify(sessionUser))
     }
 
     if (user.role === "admin") {

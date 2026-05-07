@@ -27,7 +27,7 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
     <div className="flex h-screen overflow-hidden">
       <Sidebar role="member" userName={userName} />
       <main className="flex-1 overflow-y-auto bg-gray-50">
-        <div className="p-6 lg:p-8 max-w-screen-2xl mx-auto">{children}</div>
+        <div className="p-4 pt-16 lg:p-8 max-w-screen-2xl mx-auto">{children}</div>
       </main>
     </div>
   )

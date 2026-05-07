@@ -22,9 +22,11 @@ import {
   Settings,
   BarChart3,
   Zap,
+  Menu,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 interface NavItem {
   href: string
@@ -68,23 +70,23 @@ interface SidebarProps {
   userName?: string
 }
 
-export function Sidebar({ role, clientName, userName }: SidebarProps) {
+function NavContent({
+  role,
+  clientName,
+  userName,
+  collapsed,
+  setCollapsed,
+  onNavClick,
+}: SidebarProps & { collapsed: boolean; setCollapsed: (v: boolean) => void; onNavClick?: () => void }) {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
   const navItems = role === "admin" ? adminNav : role === "member" ? memberNav : clientNav
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col h-screen bg-gray-950 text-white border-r border-gray-800 transition-all duration-200",
-        collapsed ? "w-16" : "w-64"
-      )}
-    >
-      {/* Logo */}
-      <div className={cn("flex items-center h-16 px-4 border-b border-gray-800", collapsed ? "justify-center" : "justify-between")}>
+    <div className="flex flex-col h-full">
+      <div className={cn("flex items-center h-16 px-4 border-b border-gray-800 flex-shrink-0", collapsed ? "justify-center" : "justify-between")}>
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
               <BarChart3 className="h-4 w-4 text-white" />
             </div>
             <span className="font-bold text-sm tracking-tight">TrafficDash</span>
@@ -97,21 +99,19 @@ export function Sidebar({ role, clientName, userName }: SidebarProps) {
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={cn("p-1 rounded-md hover:bg-gray-800 text-gray-400 transition-colors", collapsed && "mt-0")}
+          className="p-1 rounded-md hover:bg-gray-800 text-gray-400 transition-colors hidden lg:block"
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
       </div>
 
-      {/* Client info (for client role) */}
       {role === "client" && !collapsed && clientName && (
-        <div className="px-4 py-3 border-b border-gray-800">
+        <div className="px-4 py-3 border-b border-gray-800 flex-shrink-0">
           <p className="text-xs text-gray-500">Empresa</p>
           <p className="text-sm font-semibold text-white truncate">{clientName}</p>
         </div>
       )}
 
-      {/* Nav */}
       <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
         {!collapsed && (
           <p className="text-xs text-gray-600 px-2 pb-2 uppercase tracking-wider font-medium">
@@ -124,11 +124,10 @@ export function Sidebar({ role, clientName, userName }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavClick}
               className={cn(
-                "flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors",
-                isActive
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:bg-gray-800 hover:text-white",
+                "flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm transition-colors",
+                isActive ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-gray-800 hover:text-white",
                 collapsed && "justify-center"
               )}
               title={collapsed ? item.label : undefined}
@@ -140,8 +139,7 @@ export function Sidebar({ role, clientName, userName }: SidebarProps) {
         })}
       </nav>
 
-      {/* User info + logout */}
-      <div className={cn("border-t border-gray-800 p-3", collapsed ? "flex justify-center" : "")}>
+      <div className={cn("border-t border-gray-800 p-3 flex-shrink-0", collapsed ? "flex justify-center" : "")}>
         {!collapsed && userName && (
           <div className="mb-2 px-2">
             <p className="text-xs text-gray-500">Logado como</p>
@@ -150,6 +148,7 @@ export function Sidebar({ role, clientName, userName }: SidebarProps) {
         )}
         <Link
           href="/login"
+          onClick={onNavClick}
           className={cn(
             "flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors",
             collapsed && "justify-center"
@@ -160,6 +159,96 @@ export function Sidebar({ role, clientName, userName }: SidebarProps) {
           {!collapsed && <span>Sair</span>}
         </Link>
       </div>
-    </aside>
+    </div>
+  )
+}
+
+export function Sidebar({ role, clientName, userName }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gray-950 border-b border-gray-800 flex items-center px-4 gap-3">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
+            <BarChart3 className="h-3.5 w-3.5 text-white" />
+          </div>
+          <span className="font-bold text-sm text-white tracking-tight">TrafficDash</span>
+        </div>
+        {clientName && role === "client" && (
+          <span className="ml-auto text-xs text-gray-400 truncate max-w-[120px]">{clientName}</span>
+        )}
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 bg-black/60"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <aside
+        className={cn(
+          "lg:hidden fixed top-0 left-0 z-50 h-full w-72 bg-gray-950 text-white border-r border-gray-800 transition-transform duration-200",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between h-14 px-4 border-b border-gray-800">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
+              <BarChart3 className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="font-bold text-sm tracking-tight">TrafficDash</span>
+          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="h-[calc(100%-3.5rem)] overflow-y-auto">
+          <NavContent
+            role={role}
+            clientName={clientName}
+            userName={userName}
+            collapsed={false}
+            setCollapsed={() => {}}
+            onNavClick={() => setMobileOpen(false)}
+          />
+        </div>
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside
+        className={cn(
+          "hidden lg:flex flex-col h-screen bg-gray-950 text-white border-r border-gray-800 transition-all duration-200 flex-shrink-0",
+          collapsed ? "w-16" : "w-64"
+        )}
+      >
+        <NavContent
+          role={role}
+          clientName={clientName}
+          userName={userName}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+        />
+      </aside>
+    </>
   )
 }
