@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { mockClients, mockUsers } from "@/lib/mock-data"
 import type { Client } from "@/lib/types"
+import { usePermissions } from "@/hooks/use-permissions"
+import { AccessDenied } from "@/components/ui/access-denied"
 
 const importTypes = [
   { value: "google_ads", label: "Google Ads", color: "text-blue-600", bg: "bg-blue-50" },
@@ -31,7 +33,10 @@ const csvTemplates: Record<string, string[]> = {
 type ImportStep = "config" | "done"
 
 export default function MemberImportPage() {
+  const { can, loaded } = usePermissions()
+  const [mainTab, setMainTab] = useState<"padrao" | "apuracao">("padrao")
   const [assignedClients, setAssignedClients] = useState<Client[]>([])
+  const [assignedClientIds, setAssignedClientIds] = useState<string[]>([])
   const [importType, setImportType] = useState("")
   const [clientId, setClientId] = useState("")
   const [file, setFile] = useState<File | null>(null)
@@ -41,12 +46,21 @@ export default function MemberImportPage() {
   const [headers, setHeaders] = useState<string[]>([])
   const [errors, setErrors] = useState<string[]>([])
 
+  const [apFile, setApFile] = useState<File | null>(null)
+  const [apClient, setApClient] = useState("")
+  const [apMonth, setApMonth] = useState("4")
+  const [apYear, setApYear] = useState("2024")
+  const [apAnalyzing, setApAnalyzing] = useState(false)
+  const [apShowResults, setApShowResults] = useState(false)
+  const [apConfirmed, setApConfirmed] = useState(false)
+
   useEffect(() => {
     const userData = sessionStorage.getItem("user")
     if (!userData) return
     const user = JSON.parse(userData)
     const found = mockUsers.find((u) => u.email === user.email)
     const ids = found?.assigned_clients || []
+    setAssignedClientIds(user.assignedClients || user.assigned_clients || ids)
     setAssignedClients(mockClients.filter((c) => ids.includes(c.id)))
   }, [])
 
@@ -93,6 +107,11 @@ export default function MemberImportPage() {
     URL.revokeObjectURL(url)
   }
 
+  if (!loaded) return <div className="p-8 text-gray-400 text-sm">Carregando...</div>
+  if (!can("data.import")) return <AccessDenied message="Você não tem permissão para importar dados." />
+
+  const apAssignedClients = mockClients.filter(c => assignedClientIds.includes(c.id))
+
   return (
     <div>
       <div className="mb-6">
@@ -100,7 +119,140 @@ export default function MemberImportPage() {
         <p className="text-gray-500 mt-1">Importe métricas via planilha CSV para seus clientes</p>
       </div>
 
-      {step === "config" && (
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
+        <button onClick={() => setMainTab("padrao")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${mainTab === "padrao" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
+          Importação Padrão
+        </button>
+        <button onClick={() => setMainTab("apuracao")} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${mainTab === "apuracao" ? "bg-white shadow-sm text-gray-900" : "text-gray-500 hover:text-gray-700"}`}>
+          Apuração Inteligente
+        </button>
+      </div>
+
+      {mainTab === "apuracao" && (
+        <div>
+          <p className="text-sm text-gray-500 mb-4">Envie qualquer arquivo e o sistema identificará automaticamente os dados e métricas.</p>
+
+          <div className="flex flex-wrap gap-2 mb-6">
+            {["PDF", "CSV", "XLS", "XLSX", "PNG", "JPG", "DOC", "DOCX"].map(f => (
+              <span key={f} className="px-2 py-1 bg-gray-100 rounded-md text-xs font-medium text-gray-600">{f}</span>
+            ))}
+          </div>
+
+          {!apShowResults && !apConfirmed && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Cliente *</label>
+                <select value={apClient} onChange={e => setApClient(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                  <option value="">Selecione o cliente</option>
+                  {apAssignedClients.map(c => <option key={c.id} value={c.id}>{c.company_name}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1.5 block">Mês</label>
+                  <select value={apMonth} onChange={e => setApMonth(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                    {["1","2","3","4","5","6","7","8","9","10","11","12"].map((m,i) => (
+                      <option key={m} value={m}>{["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"][i]}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1.5 block">Ano</label>
+                  <select value={apYear} onChange={e => setApYear(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                    {["2023","2024","2025"].map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Arquivo *</label>
+                <div className={`border-2 border-dashed rounded-xl p-8 text-center ${apFile ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-gray-300"} transition-colors cursor-pointer`}
+                  onClick={() => document.getElementById("ap-file-member")?.click()}>
+                  <input id="ap-file-member" type="file" className="hidden" accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg,.doc,.docx"
+                    onChange={e => setApFile(e.target.files?.[0] || null)} />
+                  {apFile ? (
+                    <p className="text-sm font-medium text-blue-700">{apFile.name} — {(apFile.size / 1024).toFixed(1)} KB</p>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-600 font-medium">Arraste o arquivo aqui ou clique para selecionar</p>
+                      <p className="text-xs text-gray-400 mt-1">PDF, CSV, XLS, XLSX, imagens, documentos</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  if (!apFile || !apClient) return
+                  setApAnalyzing(true)
+                  await new Promise(r => setTimeout(r, 2000))
+                  setApAnalyzing(false)
+                  setApShowResults(true)
+                }}
+                disabled={!apFile || !apClient || apAnalyzing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+              >
+                {apAnalyzing ? "Analisando..." : "Analisar Arquivo"}
+              </button>
+            </div>
+          )}
+
+          {apShowResults && !apConfirmed && (
+            <div className="space-y-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold text-emerald-800">Análise concluída</span>
+                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Meta Ads detectado</span>
+                </div>
+                <p className="text-xs text-emerald-700">{apFile?.name} · Confiança: 94%</p>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500">Métrica</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500">Valor Detectado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {[["Investimento Total","R$ 4.200,00"],["Impressões","180.000"],["Cliques","3.240"],["Leads","198"],["CPL","R$ 21,21"],["ROAS","4.7x"]].map(([m,v]) => (
+                      <tr key={m} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-gray-700">{m}</td>
+                        <td className="px-4 py-3 text-right font-medium text-gray-900">{v}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+                Verifique os dados antes de confirmar. Após salvar, o administrador poderá revisar a importação.
+              </div>
+
+              <div className="flex gap-3">
+                <button onClick={() => setApConfirmed(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">Confirmar e Salvar</button>
+                <button onClick={() => { setApShowResults(false); setApFile(null) }} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600">Descartar</button>
+              </div>
+            </div>
+          )}
+
+          {apConfirmed && (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                <span className="text-2xl">✓</span>
+              </div>
+              <h3 className="font-semibold text-gray-900">Dados salvos com sucesso!</h3>
+              <p className="text-sm text-gray-500 mt-1">O administrador será notificado sobre a importação.</p>
+              <button onClick={() => { setApConfirmed(false); setApShowResults(false); setApFile(null); setApClient("") }}
+                className="mt-4 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600">Nova Apuração</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {mainTab === "padrao" && step === "config" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <Card>

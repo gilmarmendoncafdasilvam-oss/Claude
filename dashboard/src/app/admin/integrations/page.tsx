@@ -96,6 +96,14 @@ const integrations: Integration[] = [
   },
 ]
 
+const mcpBullets = [
+  "• Análise automática de métricas via IA",
+  "• Geração de relatórios com linguagem natural",
+  "• Automações baseadas em anomalias detectadas",
+]
+
+const mcpTools = ["read_metrics", "generate_report", "analyze_funnel", "send_alert", "update_action_plan"]
+
 type TestState = "idle" | "loading" | "error"
 
 type FormData = Record<string, string>
@@ -365,7 +373,70 @@ export default function IntegrationsPage() {
           {integrations.map((integration) => (
             <IntegrationCard key={integration.id} integration={integration} />
           ))}
+          <Card className="overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-xs">MCP</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-gray-900 text-sm">MCP (Model Context Protocol)</p>
+                      <Badge className="bg-purple-100 text-purple-700 border-purple-200">Em desenvolvimento</Badge>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">Conecte assistentes de IA e agentes automatizados à plataforma para análise de dados, geração de relatórios e automações inteligentes.</p>
+                    <ul className="mt-2 space-y-0.5">
+                      {mcpBullets.map((b) => (
+                        <li key={b} className="text-xs text-gray-500">{b}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <div className="flex-shrink-0">
+                  <Button size="sm" variant="outline" disabled className="text-gray-400">Em breve</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
+
+      <div className="mt-8 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">MCP — Model Context Protocol</h2>
+        <p className="text-sm text-gray-500 mb-4">Configure a conexão com servidores MCP para integrar assistentes de IA ao fluxo de dados da agência.</p>
+        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-4">
+          <p className="text-sm text-purple-800 font-medium">🤖 O que é MCP?</p>
+          <p className="text-sm text-purple-700 mt-1">MCP (Model Context Protocol) permite que assistentes de IA como Claude acessem os dados do dashboard diretamente, automatizem tarefas, gerem insights e se integrem com ferramentas externas de forma segura.</p>
+        </div>
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">URL do Servidor MCP</label>
+                <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="https://mcp.sua-agencia.com" disabled />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Token de Autenticação</label>
+                <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="mcp_••••••••••••" type="password" disabled />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1.5 block">Ferramentas Habilitadas</label>
+              <div className="flex flex-wrap gap-2">
+                {mcpTools.map((tool) => (
+                  <span key={tool} className="px-2 py-1 bg-gray-100 text-gray-500 rounded-md text-xs font-mono">{tool}</span>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button disabled className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium opacity-50 cursor-not-allowed">
+                Conectar Servidor MCP
+              </button>
+              <span className="text-xs text-gray-400">Disponível em breve</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>

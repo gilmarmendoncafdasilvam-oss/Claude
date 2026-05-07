@@ -10,24 +10,60 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mockUsers, mockClients } from "@/lib/mock-data"
+import { mockUsers, mockClients, mockReports, mockActionPlans } from "@/lib/mock-data"
 import { formatDate } from "@/lib/utils"
-import type { UserRole } from "@/lib/types"
+import type { UserRole, User as UserType } from "@/lib/types"
 import { ROLE_PERMISSIONS, ROLE_LABELS, PERMISSION_LABELS, type MemberRole, type MemberPermission } from "@/lib/permissions"
+
+type ActivityType = "publish" | "comment" | "import" | "action" | "validate" | "report" | "login" | "settings" | "user"
+
+interface ActivityItem {
+  time: string
+  action: string
+  detail: string
+  type: ActivityType
+}
+
+function getActivityHistory(u: UserType): ActivityItem[] {
+  const baseActivities: ActivityItem[] = [
+    { time: "Hoje 09:15", action: "Publicou plano de ação", detail: "Clínica Saúde Total — 8 ações publicadas", type: "publish" },
+    { time: "Hoje 08:30", action: "Editou comentário", detail: "Google Ads — campanha de pesquisa", type: "comment" },
+    { time: "Ontem 17:45", action: "Importou dados", detail: "Meta Ads — Abril 2024 — 198 leads", type: "import" },
+    { time: "Ontem 14:20", action: "Alterou status de ação", detail: "'Implementar bot WhatsApp' → Concluído", type: "action" },
+    { time: "Ontem 11:00", action: "Validou plano de ação", detail: "Corpo em Forma — 5 ações validadas", type: "validate" },
+    { time: "Seg 16:30", action: "Criou relatório", detail: "Relatório Mensal — Março 2024", type: "report" },
+    { time: "Seg 14:00", action: "Fez login", detail: "IP: 189.100.xx.xx — Chrome / Windows", type: "login" },
+    { time: "Sex 10:15", action: "Adicionou comentário", detail: "'Escalar campanha Meta +30%' — observação adicionada", type: "comment" },
+    { time: "Sex 09:30", action: "Importou dados", detail: "Google Ads — Março 2024 — 114 leads", type: "import" },
+    { time: "Qui 17:00", action: "Fez login", detail: "IP: 189.100.xx.xx — Safari / Mac", type: "login" },
+  ]
+  if (u.role === "admin") {
+    return [
+      { time: "Hoje 10:00", action: "Alterou permissões", detail: "Maria Santos → cargo: Gestor", type: "settings" },
+      { time: "Hoje 08:00", action: "Adicionou funcionário", detail: "João Ferreira cadastrado no sistema", type: "user" },
+      ...baseActivities.slice(0, 6),
+    ]
+  }
+  return baseActivities
+}
+
+const activityDotColor: Record<ActivityType, string> = {
+  publish: "bg-emerald-500",
+  comment: "bg-blue-500",
+  import: "bg-purple-500",
+  action: "bg-amber-500",
+  validate: "bg-emerald-500",
+  report: "bg-blue-500",
+  login: "bg-gray-400",
+  settings: "bg-red-500",
+  user: "bg-indigo-500",
+}
 
 const roleLabels: Record<string, string> = {
   admin: "Administrador",
   member: "Membro",
   client: "Cliente",
 }
-
-const activityHistory = [
-  { date: "2024-05-06T08:00:00Z", action: "Login realizado", type: "login" },
-  { date: "2024-05-05T16:00:00Z", action: "Plano de ação aprovado — Clínica Saúde Total", type: "action" },
-  { date: "2024-05-04T14:00:00Z", action: "Dados importados — Meta Ads", type: "import" },
-  { date: "2024-05-03T10:30:00Z", action: "Relatório publicado — Abril 2024", type: "report" },
-  { date: "2024-05-02T09:15:00Z", action: "Login realizado", type: "login" },
-]
 
 export default function AdminUserDetailPage() {
   const params = useParams()
@@ -67,6 +103,8 @@ export default function AdminUserDetailPage() {
     setPermissionsSaved(true)
     setTimeout(() => setPermissionsSaved(false), 2000)
   }
+
+  const activityHistory = user ? getActivityHistory(user) : []
 
   const permissionGroups: { label: string; permissions: MemberPermission[] }[] = [
     { label: "Clientes", permissions: ["clients.view", "clients.create", "clients.edit", "clients.delete"] },
@@ -355,7 +393,7 @@ export default function AdminUserDetailPage() {
                     }`} />
                     <div>
                       <p className="text-sm text-gray-700">{activity.action}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(activity.date)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{activity.time}</p>
                     </div>
                   </div>
                 ))}

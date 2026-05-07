@@ -147,6 +147,7 @@ export default function SettingsPage() {
           <TabsTrigger value="seguranca">Segurança</TabsTrigger>
           <TabsTrigger value="api">API & Webhooks</TabsTrigger>
           <TabsTrigger value="preferencias">Preferências</TabsTrigger>
+          <TabsTrigger value="mcp">MCP & IA</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agencia">
@@ -629,6 +630,63 @@ export default function SettingsPage() {
               </div>
 
               <Button onClick={showSaved}>Salvar Preferências</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="mcp">
+          <Card>
+            <CardHeader>
+              <CardTitle>MCP — Model Context Protocol</CardTitle>
+              <CardDescription>Conecte assistentes de IA para automatizar análises e relatórios</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <p className="text-sm font-semibold text-purple-800 mb-1">🤖 Integração com IA</p>
+                <p className="text-sm text-purple-700">Com MCP, assistentes de IA podem acessar dados da plataforma, gerar relatórios automaticamente e detectar anomalias em tempo real.</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>URL do Servidor MCP</Label>
+                  <Input placeholder="https://mcp.sua-agencia.com" disabled />
+                  <p className="text-xs text-gray-400">Endpoint do seu servidor MCP compatível com o protocolo Anthropic.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Token de Autenticação</Label>
+                  <Input type="password" placeholder="mcp_token_••••••••" disabled />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Modelo Padrão de IA</Label>
+                  <select disabled className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-400">
+                    <option>Claude Sonnet (Anthropic)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-3">Automações disponíveis via IA</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Gerar diagnóstico automaticamente", desc: "IA analisa métricas e gera diagnóstico estratégico" },
+                    { label: "Sugerir plano de ação", desc: "Baseado nos dados do período, sugere ações prioritárias" },
+                    { label: "Detectar anomalias", desc: "Alerta quando métricas fogem do padrão histórico" },
+                    { label: "Relatório narrativo", desc: "Gera texto explicativo para o relatório do cliente" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-start justify-between p-3 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                      </div>
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full shrink-0 ml-3">Em breve</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button disabled>Salvar Configuração MCP</Button>
+                <Button variant="outline" disabled>Testar Conexão</Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

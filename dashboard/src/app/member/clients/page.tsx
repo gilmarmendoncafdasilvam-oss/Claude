@@ -2,15 +2,18 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Building2, Search, ExternalLink, CheckSquare } from "lucide-react"
+import { Building2, Search, ExternalLink, CheckSquare, Plus } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { mockClients, mockUsers, mockActionPlans } from "@/lib/mock-data"
 import type { Client } from "@/lib/types"
+import { usePermissions } from "@/hooks/use-permissions"
+import { AccessDenied } from "@/components/ui/access-denied"
 
 export default function MemberClientsPage() {
+  const { can, loaded } = usePermissions()
   const [search, setSearch] = useState("")
   const [assignedClients, setAssignedClients] = useState<Client[]>([])
 
@@ -22,6 +25,9 @@ export default function MemberClientsPage() {
     const ids = found?.assigned_clients || []
     setAssignedClients(mockClients.filter((c) => ids.includes(c.id)))
   }, [])
+
+  if (!loaded) return <div className="p-8 text-gray-400 text-sm">Carregando...</div>
+  if (!can("clients.view")) return <AccessDenied message="Você não tem permissão para visualizar clientes." />
 
   const filtered = assignedClients.filter(
     (c) =>
@@ -37,6 +43,13 @@ export default function MemberClientsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Meus Clientes</h1>
           <p className="text-gray-500 mt-1">{assignedClients.length} clientes atribuídos</p>
         </div>
+        {can("clients.create") && (
+          <Button asChild>
+            <Link href="/member/clients/new">
+              <Plus className="h-4 w-4" /> Novo Cliente
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Card>

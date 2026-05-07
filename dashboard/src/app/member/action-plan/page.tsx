@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { mockActionPlans, mockClients, mockUsers } from "@/lib/mock-data"
 import { getPriorityColor, formatDate } from "@/lib/utils"
 import type { ActionPlan, ActionStatus } from "@/lib/types"
+import { usePermissions } from "@/hooks/use-permissions"
+import { AccessDenied } from "@/components/ui/access-denied"
 
 const statusIcons = {
   pendente: <Circle className="h-4 w-4 text-gray-400" />,
@@ -22,6 +24,7 @@ const statusColors = {
 }
 
 export default function MemberActionPlanPage() {
+  const { can, loaded } = usePermissions()
   const [actions, setActions] = useState<ActionPlan[]>([])
   const [assignedClientIds, setAssignedClientIds] = useState<string[]>([])
   const [editingComment, setEditingComment] = useState<string | null>(null)
@@ -81,6 +84,9 @@ export default function MemberActionPlanPage() {
     })
   }
 
+  if (!loaded) return <div className="p-8 text-gray-400 text-sm">Carregando...</div>
+  if (!can("action_plans.view")) return <AccessDenied message="Você não tem permissão para visualizar planos de ação." />
+
   const clientsWithActions = assignedClientIds
     .map((id) => ({
       client: mockClients.find((c) => c.id === id),
@@ -100,10 +106,12 @@ export default function MemberActionPlanPage() {
             {validatedCount}/{totalActions} validadas · {publishedCount} publicadas para clientes
           </p>
         </div>
-        <Button onClick={publishAllValidated} className="flex items-center gap-2">
-          <Send className="h-4 w-4" />
-          Publicar Todas Validadas
-        </Button>
+        {can("action_plans.publish") && (
+          <Button onClick={publishAllValidated} className="flex items-center gap-2">
+            <Send className="h-4 w-4" />
+            Publicar Todas Validadas
+          </Button>
+        )}
       </div>
 
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
@@ -203,18 +211,20 @@ export default function MemberActionPlanPage() {
                             <option value="concluído">Concluído</option>
                           </select>
 
-                          <Button
-                            size="sm"
-                            variant={action.validated ? "default" : "outline"}
-                            className={`text-xs h-7 ${action.validated ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
-                            onClick={() => toggleValidated(action.id)}
-                          >
-                            {action.validated ? (
-                              <><CheckCircle2 className="h-3 w-3" /> Validado</>
-                            ) : (
-                              "Validar"
-                            )}
-                          </Button>
+                          {can("action_plans.edit") && (
+                            <Button
+                              size="sm"
+                              variant={action.validated ? "default" : "outline"}
+                              className={`text-xs h-7 ${action.validated ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
+                              onClick={() => toggleValidated(action.id)}
+                            >
+                              {action.validated ? (
+                                <><CheckCircle2 className="h-3 w-3" /> Validado</>
+                              ) : (
+                                "Validar"
+                              )}
+                            </Button>
+                          )}
 
                           <Button
                             size="sm"
@@ -225,18 +235,20 @@ export default function MemberActionPlanPage() {
                             {action.comments ? "Editar Nota" : "Adicionar Nota"}
                           </Button>
 
-                          <Button
-                            size="sm"
-                            variant={action.published_to_client ? "outline" : "default"}
-                            className="text-xs h-7"
-                            onClick={() => togglePublished(action.id)}
-                          >
-                            {action.published_to_client ? (
-                              <><EyeOff className="h-3 w-3" /> Despublicar</>
-                            ) : (
-                              <><Eye className="h-3 w-3" /> Publicar para Cliente</>
-                            )}
-                          </Button>
+                          {can("action_plans.publish") && (
+                            <Button
+                              size="sm"
+                              variant={action.published_to_client ? "outline" : "default"}
+                              className="text-xs h-7"
+                              onClick={() => togglePublished(action.id)}
+                            >
+                              {action.published_to_client ? (
+                                <><EyeOff className="h-3 w-3" /> Despublicar</>
+                              ) : (
+                                <><Eye className="h-3 w-3" /> Publicar para Cliente</>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
