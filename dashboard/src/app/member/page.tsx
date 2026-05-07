@@ -98,13 +98,17 @@ export default function MemberDashboardPage() {
                     const clientActions = mockActionPlans.filter((a) => a.client_id === client.id)
                     const pending = clientActions.filter((a) => a.status === "pendente").length
                     return (
-                      <div key={client.id} className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors">
+                      <Link
+                        key={client.id}
+                        href={`/member/clients/${client.id}`}
+                        className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                      >
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center">
                             <Building2 className="h-4 w-4 text-blue-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900 text-sm">{client.company_name}</p>
+                            <p className="font-medium text-gray-900 text-sm group-hover:text-blue-600">{client.company_name}</p>
                             <p className="text-xs text-gray-500">{client.segment}</p>
                           </div>
                         </div>
@@ -115,18 +119,9 @@ export default function MemberDashboardPage() {
                           {pending > 0 && (
                             <Badge variant="warning">{pending} pendente{pending > 1 ? "s" : ""}</Badge>
                           )}
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/member/action-plan`} className="flex items-center gap-1">
-                              <CheckSquare className="h-3.5 w-3.5" />
-                            </Link>
-                          </Button>
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link href={`/member/clients`}>
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          </Button>
+                          <ArrowRight className="h-4 w-4 text-gray-400" />
                         </div>
-                      </div>
+                      </Link>
                     )
                   })}
                 </div>

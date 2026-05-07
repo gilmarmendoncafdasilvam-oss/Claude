@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
+import { toast } from "sonner"
 import {
   Building2,
   Globe,
@@ -59,6 +60,12 @@ export default function AdminClientDetailPage() {
   )
   const [noteSaved, setNoteSaved] = useState(false)
 
+  function handleSaveNote() {
+    setNoteSaved(true)
+    toast.success("Nota interna salva com sucesso")
+    setTimeout(() => setNoteSaved(false), 2000)
+  }
+
   const client = mockClients.find((c) => c.id === id)
   const clientReports = mockReports.filter((r) => r.client_id === id)
   const clientActions = mockActionPlans.filter((a) => a.client_id === id)
@@ -92,10 +99,7 @@ export default function AdminClientDetailPage() {
   const pendingActions = clientActions.filter((a) => a.status === "pendente").length
   const completedActions = clientActions.filter((a) => a.status === "concluído").length
 
-  function handleSaveNote() {
-    setNoteSaved(true)
-    setTimeout(() => setNoteSaved(false), 2000)
-  }
+
 
   return (
     <div>

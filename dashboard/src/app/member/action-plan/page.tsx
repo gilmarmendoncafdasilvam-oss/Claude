@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 import { CheckCircle2, Clock, Circle, Eye, EyeOff, AlertTriangle, Send } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -53,6 +54,9 @@ export default function MemberActionPlanPage() {
     setActions((prev) => {
       const updated = prev.map((a) => (a.id === id ? { ...a, published_to_client: !a.published_to_client } : a))
       setPublishedCount(updated.filter((a) => a.published_to_client).length)
+      const action = updated.find((a) => a.id === id)
+      if (action?.published_to_client) toast.success("Ação publicada para o cliente")
+      else toast.info("Ação despublicada")
       return updated
     })
   }
@@ -61,6 +65,7 @@ export default function MemberActionPlanPage() {
     setActions((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status } : a))
     )
+    toast.success(`Status atualizado para "${status}"`)
   }
 
   function startEditComment(action: ActionPlan) {
@@ -74,12 +79,15 @@ export default function MemberActionPlanPage() {
     )
     setEditingComment(null)
     setCommentDraft("")
+    toast.success("Comentário salvo")
   }
 
   function publishAllValidated() {
     setActions((prev) => {
       const updated = prev.map((a) => (a.validated ? { ...a, published_to_client: true } : a))
+      const count = updated.filter((a) => a.published_to_client && a.validated).length
       setPublishedCount(updated.filter((a) => a.published_to_client).length)
+      toast.success(`${count} ação(ões) publicadas para os clientes`)
       return updated
     })
   }

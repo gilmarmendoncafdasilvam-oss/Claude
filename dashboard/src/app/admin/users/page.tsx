@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { UserCircle, Plus, Search, Shield, User } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,7 @@ import { mockUsers, mockClients } from "@/lib/mock-data"
 import { formatDate } from "@/lib/utils"
 
 export default function UsersPage() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
 
   const filtered = mockUsers.filter(
@@ -59,13 +61,17 @@ export default function UsersPage() {
             {filtered.map((user) => {
               const client = user.client_id ? mockClients.find((c) => c.id === user.client_id) : null
               return (
-                <div key={user.id} className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50">
+                <div
+                  key={user.id}
+                  className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/admin/users/${user.id}`)}
+                >
                   <div className="col-span-4 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center">
                       <UserCircle className="h-5 w-5 text-gray-500" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+                      <p className="font-medium text-gray-900 text-sm hover:text-blue-600 transition-colors">{user.name}</p>
                       <p className="text-xs text-gray-500">{user.email}</p>
                     </div>
                   </div>
@@ -83,7 +89,7 @@ export default function UsersPage() {
                   <div className="col-span-2">
                     <p className="text-sm text-gray-500">{user.last_login ? formatDate(user.last_login) : "—"}</p>
                   </div>
-                  <div className="col-span-1 flex justify-end">
+                  <div className="col-span-1 flex justify-end" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/admin/users/${user.id}`}>Editar</Link>
                     </Button>

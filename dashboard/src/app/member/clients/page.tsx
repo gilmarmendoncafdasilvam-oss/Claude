@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Building2, Search, ExternalLink, CheckSquare, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Building2, Search, CheckSquare, Plus, ArrowRight } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +14,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { AccessDenied } from "@/components/ui/access-denied"
 
 export default function MemberClientsPage() {
+  const router = useRouter()
   const { can, loaded } = usePermissions()
   const [search, setSearch] = useState("")
   const [assignedClients, setAssignedClients] = useState<Client[]>([])
@@ -84,13 +86,17 @@ export default function MemberClientsPage() {
                 (a) => a.client_id === client.id && a.status === "pendente"
               ).length
               return (
-                <div key={client.id} className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50 transition-colors">
+                <div
+                  key={client.id}
+                  className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={() => router.push(`/member/clients/${client.id}`)}
+                >
                   <div className="col-span-4 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
                       <Building2 className="h-4 w-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{client.company_name}</p>
+                      <p className="font-medium text-gray-900 text-sm hover:text-blue-600 transition-colors">{client.company_name}</p>
                       {client.trade_name && <p className="text-xs text-gray-500">{client.trade_name}</p>}
                     </div>
                   </div>
@@ -111,22 +117,15 @@ export default function MemberClientsPage() {
                       {client.status}
                     </Badge>
                   </div>
-                  <div className="col-span-2 flex items-center justify-end gap-1">
+                  <div className="col-span-2 flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     {pendingActions > 0 && (
                       <Badge variant="warning" className="text-xs mr-1">{pendingActions}</Badge>
                     )}
-                    <Button variant="ghost" size="sm" asChild title="Ver plano de ação">
-                      <Link href="/member/action-plan">
-                        <CheckSquare className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="sm" asChild title="Ver detalhes">
+                      <Link href={`/member/clients/${client.id}`}>
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>
-                    {client.website && (
-                      <Button variant="ghost" size="sm" asChild title="Visitar site">
-                        <a href={client.website} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      </Button>
-                    )}
                   </div>
                 </div>
               )
@@ -173,14 +172,14 @@ export default function MemberClientsPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="flex-1" asChild>
-                    <Link href="/member/action-plan">
-                      <CheckSquare className="h-3.5 w-3.5" />
-                      Plano de Ação
+                    <Link href={`/member/clients/${client.id}`}>
+                      Ver Detalhes
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1" asChild>
-                    <Link href="/member/reports">
-                      Ver Relatórios
+                  <Button size="sm" className="flex-1" asChild>
+                    <Link href={`/member/clients/${client.id}?tab=action-plan`}>
+                      <CheckSquare className="h-3.5 w-3.5" />
+                      Plano
                     </Link>
                   </Button>
                 </div>

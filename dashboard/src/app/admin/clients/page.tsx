@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Building2, Plus, Search, ExternalLink, Edit, ArrowRight } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Building2, Plus, Search, Edit, ArrowRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { mockClients } from "@/lib/mock-data"
 
 export default function ClientsPage() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
 
   const filtered = mockClients.filter(
@@ -57,13 +59,17 @@ export default function ClientsPage() {
               <span className="col-span-2 text-right">Ações</span>
             </div>
             {filtered.map((client) => (
-              <div key={client.id} className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50 transition-colors">
+              <div
+                key={client.id}
+                className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => router.push(`/admin/clients/${client.id}`)}
+              >
                 <div className="col-span-4 flex items-center gap-3">
                   <div className="h-9 w-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <Building2 className="h-4 w-4 text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">{client.company_name}</p>
+                    <p className="font-medium text-gray-900 text-sm hover:text-blue-600 transition-colors">{client.company_name}</p>
                     {client.trade_name && <p className="text-xs text-gray-500">{client.trade_name}</p>}
                   </div>
                 </div>
@@ -84,7 +90,7 @@ export default function ClientsPage() {
                     {client.status}
                   </Badge>
                 </div>
-                <div className="col-span-2 flex items-center justify-end gap-1">
+                <div className="col-span-2 flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={`/admin/clients/${client.id}`} title="Editar">
                       <Edit className="h-3.5 w-3.5" />

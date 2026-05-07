@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { FileBarChart, Search, Eye } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ const typeLabels: Record<string, string> = {
 }
 
 export default function MemberReportsPage() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
   const [filteredReports, setFilteredReports] = useState<Report[]>([])
 
@@ -76,9 +78,13 @@ export default function MemberReportsPage() {
             {searched.map((report) => {
               const client = mockClients.find((c) => c.id === report.client_id)
               return (
-                <div key={report.id} className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50">
+                <div
+                  key={report.id}
+                  className="grid grid-cols-12 px-6 py-4 items-center hover:bg-gray-50 cursor-pointer"
+                  onClick={() => router.push(`/member/reports/${report.id}`)}
+                >
                   <div className="col-span-4">
-                    <p className="font-medium text-gray-900 text-sm">{report.title}</p>
+                    <p className="font-medium text-gray-900 text-sm hover:text-blue-600 transition-colors">{report.title}</p>
                     <p className="text-xs text-gray-400 mt-0.5">Criado em {formatDate(report.created_at)}</p>
                   </div>
                   <div className="col-span-2">
@@ -92,7 +98,7 @@ export default function MemberReportsPage() {
                       {formatDate(report.period_start)} – {formatDate(report.period_end)}
                     </p>
                   </div>
-                  <div className="col-span-2 flex items-center justify-end gap-1">
+                  <div className="col-span-2 flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/member/reports/${report.id}`}>
                         <Eye className="h-3.5 w-3.5" />

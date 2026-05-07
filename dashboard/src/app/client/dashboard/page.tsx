@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Download, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -42,6 +42,14 @@ const presetLabels: Record<string, string> = {
 export default function ClientDashboardPage() {
   const [startDate, setStartDate] = useState("2024-04-01")
   const [endDate, setEndDate] = useState("2024-04-30")
+  const [clientName, setClientName] = useState("Clínica Saúde Total")
+
+  useEffect(() => {
+    const userData = sessionStorage.getItem("user")
+    if (!userData) return
+    const user = JSON.parse(userData)
+    if (user.name) setClientName(user.name)
+  }, [])
 
   const periodKey = `${startDate}|${endDate}`
   const periodLabel = presetLabels[periodKey]
