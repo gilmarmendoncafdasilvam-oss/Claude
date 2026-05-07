@@ -32,35 +32,45 @@ export default function LoginPage() {
     setError("")
     setLoading(true)
 
-    await new Promise((r) => setTimeout(r, 800))
+    try {
+      // Call server-side auth endpoint (uses Supabase when configured, demo fallback otherwise)
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
 
-    const user = DEMO_USERS.find((u) => u.email === email && u.password === password)
+      if (!res.ok || data.error) {
+        setError("E-mail ou senha incorretos. Tente: admin@agencia.com / admin123")
+        setLoading(false)
+        return
+      }
 
-    if (!user) {
-      setError("E-mail ou senha incorretos. Tente: admin@agencia.com / admin123")
-      setLoading(false)
-      return
-    }
+      const user = data.user
+      const role = user.role ?? user.user_metadata?.role ?? "client"
 
-    if (typeof window !== "undefined") {
+      // Merge with mock data for permissions/assigned_clients (demo mode)
       const mockUser = mockUsers.find((u) => u.email === user.email)
-      const memberRole = mockUser?.member_role as MemberRole | undefined
+      const memberRole = (user.member_role ?? mockUser?.member_role ?? "") as MemberRole | ""
       const sessionUser = {
-        ...user,
-        permissions: mockUser?.permissions ?? (memberRole ? ROLE_PERMISSIONS[memberRole] : []),
-        assigned_clients: mockUser?.assigned_clients ?? [],
-        member_role: memberRole ?? "",
-        id: mockUser?.id ?? "",
+        id: user.id ?? "",
+        email: user.email,
+        name: user.name ?? user.user_metadata?.name ?? user.email,
+        role,
+        permissions: user.permissions ?? mockUser?.permissions ?? (memberRole ? ROLE_PERMISSIONS[memberRole as MemberRole] : []),
+        assigned_clients: user.assigned_clients ?? mockUser?.assigned_clients ?? [],
+        member_role: memberRole,
+        clientId: user.client_id ?? user.clientId ?? "",
       }
       sessionStorage.setItem("user", JSON.stringify(sessionUser))
-    }
 
-    if (user.role === "admin") {
-      router.push("/admin")
-    } else if (user.role === "member") {
-      router.push("/member")
-    } else {
-      router.push("/client/dashboard")
+      if (role === "admin") router.push("/admin")
+      else if (role === "member") router.push("/member")
+      else router.push("/client/dashboard")
+    } catch {
+      setError("Erro de conexão. Verifique sua internet e tente novamente.")
+      setLoading(false)
     }
   }
 

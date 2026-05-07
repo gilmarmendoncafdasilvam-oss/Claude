@@ -1,4 +1,35 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+
+function isPlaceholder(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+  return url.includes("placeholder") || url === ""
+}
+
+async function saveTokenToSupabase(row: {
+  client_id: string
+  provider: string
+  access_token: string
+  account_id: string
+  account_name: string
+  expires_at: string | null
+}): Promise<boolean> {
+  if (isPlaceholder()) return false
+  try {
+    const supabase = createAdminClient()
+    const { error } = await supabase
+      .from("oauth_tokens")
+      .upsert({ ...row, connected: true }, { onConflict: "client_id,provider" })
+    if (error) {
+      console.error("[meta/callback] Supabase upsert error:", error.message)
+      return false
+    }
+    return true
+  } catch (err) {
+    console.error("[meta/callback] Supabase unexpected error:", err)
+    return false
+  }
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -26,15 +57,15 @@ export async function GET(request: NextRequest) {
   const appSecret = process.env.META_APP_SECRET
 
   if (!appId || !appSecret) {
-    // Demo mode: redirect back with mock success
-    const params = new URLSearchParams({
+    // Demo mode: redirect back with mock success (no token in URL)
+    const redirectParams = new URLSearchParams({
+      tab: "integrations",
       oauth_success: "1",
       provider: state.provider,
-      client_id: state.clientId,
-      account_id: "demo_act_000000",
       account_name: "Demo Account (sem credenciais reais)",
+      account_id: "demo_act_000000",
     })
-    return NextResponse.redirect(`${appUrl}/admin/clients/${state.clientId}?tab=integrations&${params}`)
+    return NextResponse.redirect(`${appUrl}/admin/clients/${state.clientId}?${redirectParams}`)
   }
 
   try {
@@ -54,7 +85,10 @@ export async function GET(request: NextRequest) {
       throw new Error(tokenData.error.message)
     }
 
-    const accessToken = tokenData.access_token
+    const accessToken: string = tokenData.access_token
+    const expiresAt = tokenData.expires_in
+      ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+      : null
 
     // Fetch ad accounts for this token
     const accountsRes = await fetch(
@@ -62,21 +96,47 @@ export async function GET(request: NextRequest) {
     )
     const accountsData = await accountsRes.json()
     const firstAccount = accountsData.data?.[0]
+    const accountId: string = firstAccount?.id || ""
+    const accountName: string = firstAccount?.name || "Meta Ads"
 
-    // Pass token data back to client via URL params (client will store in localStorage)
-    const params = new URLSearchParams({
-      oauth_success: "1",
-      provider: state.provider,
+    // Attempt to save to Supabase
+    const saved = await saveTokenToSupabase({
       client_id: state.clientId,
+      provider: state.provider,
       access_token: accessToken,
-      account_id: firstAccount?.id || "",
-      account_name: firstAccount?.name || "Meta Ads",
-      expires_at: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
+      account_id: accountId,
+      account_name: accountName,
+      expires_at: expiresAt,
     })
 
-    return NextResponse.redirect(`${appUrl}/admin/clients/${state.clientId}?tab=integrations&${params}`)
+    if (saved) {
+      // Token is in DB — do NOT include it in the URL
+      const redirectParams = new URLSearchParams({
+        tab: "integrations",
+        oauth_success: "1",
+        provider: state.provider,
+        account_name: accountName,
+        account_id: accountId,
+      })
+      return NextResponse.redirect(`${appUrl}/admin/clients/${state.clientId}?${redirectParams}`)
+    } else {
+      // Supabase unavailable — fall back to URL params approach
+      const redirectParams = new URLSearchParams({
+        tab: "integrations",
+        oauth_success: "1",
+        provider: state.provider,
+        client_id: state.clientId,
+        access_token: accessToken,
+        account_id: accountId,
+        account_name: accountName,
+        ...(expiresAt ? { expires_at: expiresAt } : {}),
+      })
+      return NextResponse.redirect(`${appUrl}/admin/clients/${state.clientId}?${redirectParams}`)
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown_error"
-    return NextResponse.redirect(`${appUrl}/admin/clients/${state.clientId}?tab=integrations&oauth_error=${encodeURIComponent(msg)}`)
+    return NextResponse.redirect(
+      `${appUrl}/admin/clients/${state.clientId}?tab=integrations&oauth_error=${encodeURIComponent(msg)}`
+    )
   }
 }

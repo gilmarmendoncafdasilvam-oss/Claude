@@ -94,7 +94,30 @@ export default function AdminClientDetailPage() {
     }
   })
 
-  function toggleIntegration(key: string) {
+  // Load tokens from Supabase on mount — merge with localStorage defaults
+  useEffect(() => {
+    fetch(`/api/integrations/${id}`)
+      .then((r) => r.json())
+      .then(({ tokens }) => {
+        if (!tokens?.length) return
+        setIntegrations((prev) => {
+          const merged = { ...prev }
+          for (const t of tokens) {
+            merged[t.provider] = {
+              connected: t.connected,
+              account_id: t.account_id || "",
+              account_name: t.account_name || "",
+              last_sync: t.updated_at ? `Atualizado em ${new Date(t.updated_at).toLocaleString("pt-BR")}` : "",
+            }
+          }
+          localStorage.setItem(storageKey, JSON.stringify(merged))
+          return merged
+        })
+      })
+      .catch(() => { /* Supabase offline — localStorage stays */ })
+  }, [id, storageKey])
+
+  async function toggleIntegration(key: string) {
     setIntegrations((prev) => {
       const curr = prev[key]
       const wasConnected = curr.connected
@@ -103,8 +126,10 @@ export default function AdminClientDetailPage() {
         [key]: { ...curr, connected: !wasConnected, last_sync: !wasConnected ? "Agora mesmo" : "" },
       }
       localStorage.setItem(storageKey, JSON.stringify(updated))
+      // Also update Supabase
+      fetch(`/api/integrations/${id}?provider=${key}`, { method: "DELETE" }).catch(() => {})
       toast[wasConnected ? "info" : "success"](
-        wasConnected ? `${key.replace(/_/g, " ")} desconectado` : `${key.replace(/_/g, " ")} conectado com sucesso`
+        wasConnected ? `${key.replace(/_/g, " ")} desconectado` : `${key.replace(/_/g, " ")} conectado`
       )
       return updated
     })
