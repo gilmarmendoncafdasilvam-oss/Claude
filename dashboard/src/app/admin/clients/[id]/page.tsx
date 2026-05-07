@@ -18,6 +18,14 @@ import {
   AtSign,
   Clock,
   AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  Link2,
+  Unlink,
+  Zap,
+  MessageSquare,
+  Target,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -59,6 +67,28 @@ export default function AdminClientDetailPage() {
     "Cliente preferencial — negociar renovação até junho. Ticket médio acima da média da carteira."
   )
   const [noteSaved, setNoteSaved] = useState(false)
+
+  const [integrations, setIntegrations] = useState({
+    meta_ads: { connected: true, account_id: "act_123456789", account_name: "Clínica Saúde Total - Ads", last_sync: "Há 2 horas" },
+    google_ads: { connected: true, account_id: "AW-987654321", account_name: "Saúde Total Google Ads", last_sync: "Há 3 horas" },
+    ga4: { connected: true, account_id: "G-ABC123XYZ", account_name: "Saúde Total - GA4", last_sync: "Há 1 hora" },
+    meta_business: { connected: false, account_id: "", account_name: "", last_sync: "" },
+    whatsapp: { connected: true, account_id: "+55 11 99999-0000", account_name: "WhatsApp Business", last_sync: "Há 30 min" },
+    rd_station: { connected: false, account_id: "", account_name: "", last_sync: "" },
+    google_sheets: { connected: false, account_id: "", account_name: "", last_sync: "" },
+  })
+
+  function toggleIntegration(key: string) {
+    setIntegrations((prev) => {
+      const curr = prev[key as keyof typeof prev]
+      const wasConnected = curr.connected
+      toast[wasConnected ? "info" : "success"](wasConnected ? `${key} desconectado` : `${key} conectado com sucesso`)
+      return {
+        ...prev,
+        [key]: { ...curr, connected: !wasConnected, last_sync: !wasConnected ? "Agora mesmo" : "" },
+      }
+    })
+  }
 
   function handleSaveNote() {
     setNoteSaved(true)
@@ -152,10 +182,11 @@ export default function AdminClientDetailPage() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="reports">Relatórios</TabsTrigger>
           <TabsTrigger value="metrics">Métricas</TabsTrigger>
+          <TabsTrigger value="integrations">Integrações</TabsTrigger>
           <TabsTrigger value="data">Dados do Cliente</TabsTrigger>
           <TabsTrigger value="internal">Dados Internos</TabsTrigger>
         </TabsList>
@@ -514,7 +545,171 @@ export default function AdminClientDetailPage() {
             </Card>
           </div>
         </TabsContent>
+
+        <TabsContent value="integrations">
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
+              <strong>Integrações por cliente</strong> — conecte as contas de anúncios, analytics e CRM específicas deste cliente. Cada integração sincroniza os dados automaticamente para os relatórios.
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Meta Ads */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center"><Target className="h-4 w-4 text-white" /></div>}
+                name="Meta Ads"
+                description="Facebook & Instagram Ads — campanhas, conjuntos e anúncios"
+                integration={integrations.meta_ads}
+                onToggle={() => toggleIntegration("meta_ads")}
+              />
+              {/* Google Ads */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-amber-500 flex items-center justify-center"><Zap className="h-4 w-4 text-white" /></div>}
+                name="Google Ads"
+                description="Campanhas de pesquisa, display, YouTube e shopping"
+                integration={integrations.google_ads}
+                onToggle={() => toggleIntegration("google_ads")}
+              />
+              {/* GA4 */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center"><Globe className="h-4 w-4 text-white" /></div>}
+                name="Google Analytics 4"
+                description="Tráfego orgânico, sessões, conversões e comportamento do site"
+                integration={integrations.ga4}
+                onToggle={() => toggleIntegration("ga4")}
+              />
+              {/* Meta Business */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center"><Building2 className="h-4 w-4 text-white" /></div>}
+                name="Meta Business Suite"
+                description="Página do Facebook, Instagram e engajamento orgânico"
+                integration={integrations.meta_business}
+                onToggle={() => toggleIntegration("meta_business")}
+              />
+              {/* WhatsApp */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-emerald-500 flex items-center justify-center"><MessageSquare className="h-4 w-4 text-white" /></div>}
+                name="WhatsApp Business"
+                description="Conversas, leads via WhatsApp e taxa de resposta"
+                integration={integrations.whatsapp}
+                onToggle={() => toggleIntegration("whatsapp")}
+              />
+              {/* RD Station */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-rose-500 flex items-center justify-center"><TrendingUp className="h-4 w-4 text-white" /></div>}
+                name="RD Station CRM"
+                description="Pipeline de vendas, oportunidades e receita gerada"
+                integration={integrations.rd_station}
+                onToggle={() => toggleIntegration("rd_station")}
+              />
+              {/* Google Sheets */}
+              <IntegrationCard
+                icon={<div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center"><Activity className="h-4 w-4 text-white" /></div>}
+                name="Google Sheets"
+                description="Planilha de dados customizada para importação manual"
+                integration={integrations.google_sheets}
+                onToggle={() => toggleIntegration("google_sheets")}
+              />
+              {/* MCP */}
+              <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="flex items-start gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-gray-900 text-sm">MCP / Automação</p>
+                      <Badge variant="secondary">Em breve</Badge>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Conecte via Model Context Protocol para automações avançadas com IA</p>
+                    <div className="mt-3 bg-gray-50 rounded-lg p-3 text-xs font-mono text-gray-600 break-all">
+                      wss://mcp.trafficdash.io/client/{id}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sync status overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Status de Sincronização</CardTitle>
+                <CardDescription>Última atualização dos dados de cada canal</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {Object.entries(integrations)
+                    .filter(([, v]) => v.connected)
+                    .map(([key, v]) => (
+                      <div key={key} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          <span className="text-sm font-medium text-gray-700 capitalize">{key.replace(/_/g, " ")}</span>
+                          <span className="text-xs text-gray-400">{v.account_id}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-400">{v.last_sync}</span>
+                          <Button variant="ghost" size="sm" onClick={() => toast.success(`${key} sincronizado`)}>
+                            <RefreshCw className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  {Object.values(integrations).filter((v) => v.connected).length === 0 && (
+                    <p className="text-sm text-gray-400 text-center py-4">Nenhuma integração conectada</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
+    </div>
+  )
+}
+
+interface IntegrationCardProps {
+  icon: React.ReactNode
+  name: string
+  description: string
+  integration: { connected: boolean; account_id: string; account_name: string; last_sync: string }
+  onToggle: () => void
+}
+
+function IntegrationCard({ icon, name, description, integration, onToggle }: IntegrationCardProps) {
+  return (
+    <div className={`bg-white rounded-xl border p-5 transition-colors ${integration.connected ? "border-emerald-200" : "border-gray-200"}`}>
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-semibold text-gray-900 text-sm">{name}</p>
+            {integration.connected ? (
+              <Badge variant="success" className="text-xs">Conectado</Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">Desconectado</Badge>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">{description}</p>
+          {integration.connected && integration.account_name && (
+            <div className="mt-2 bg-gray-50 rounded-lg px-3 py-2">
+              <p className="text-xs font-medium text-gray-700">{integration.account_name}</p>
+              <p className="text-xs text-gray-400">{integration.account_id} · {integration.last_sync}</p>
+            </div>
+          )}
+          <Button
+            size="sm"
+            variant={integration.connected ? "outline" : "default"}
+            className="mt-3 w-full"
+            onClick={onToggle}
+          >
+            {integration.connected ? (
+              <><Unlink className="h-3.5 w-3.5" /> Desconectar</>
+            ) : (
+              <><Link2 className="h-3.5 w-3.5" /> Conectar</>
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

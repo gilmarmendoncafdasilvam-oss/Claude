@@ -56,12 +56,13 @@ const clientNav: NavItem[] = [
   { href: "/client/action-plan", label: "Plano de Ação", icon: CheckSquare },
 ]
 
+// Member sees same as admin, minus Users and Configurações
 const memberNav: NavItem[] = [
-  { href: "/member", label: "Visão Geral", icon: LayoutDashboard },
-  { href: "/member/clients", label: "Meus Clientes", icon: Building2 },
-  { href: "/member/action-plan", label: "Planos de Ação", icon: CheckSquare },
-  { href: "/member/reports", label: "Relatórios", icon: FileBarChart },
-  { href: "/member/import", label: "Importar Dados", icon: Upload },
+  { href: "/admin", label: "Visão Geral", icon: LayoutDashboard },
+  { href: "/admin/clients", label: "Clientes", icon: Building2 },
+  { href: "/admin/reports", label: "Relatórios", icon: FileBarChart },
+  { href: "/admin/import", label: "Importar Dados", icon: Upload },
+  { href: "/admin/integrations", label: "Integrações", icon: Zap },
 ]
 
 interface SidebarProps {
@@ -115,7 +116,7 @@ function NavContent({
       <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto">
         {!collapsed && (
           <p className="text-xs text-gray-600 px-2 pb-2 uppercase tracking-wider font-medium">
-            {role === "admin" ? "Administração" : role === "member" ? "Área de Membros" : "Meu Dashboard"}
+            {role === "admin" ? "Administração" : role === "member" ? "Painel" : "Meu Dashboard"}
           </p>
         )}
         {navItems.map((item) => {
