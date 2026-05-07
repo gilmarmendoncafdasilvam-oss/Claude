@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useState, useEffect, useCallback } from "react"
+import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
 import {
@@ -61,7 +61,9 @@ const DEFAULT_ACTIVITY = [
 
 export default function AdminClientDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const id = params.id as string
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
   const [internalNote, setInternalNote] = useState(
     "Cliente preferencial — negociar renovação até junho. Ticket médio acima da média da carteira."
@@ -106,6 +108,124 @@ export default function AdminClientDetailPage() {
       )
       return updated
     })
+  }
+
+  // Handle OAuth callback — params come back from /api/oauth/*/callback
+  useEffect(() => {
+    const success = searchParams.get("oauth_success")
+    const oauthError = searchParams.get("oauth_error")
+    const provider = searchParams.get("provider")
+    const accountId = searchParams.get("account_id")
+    const accountName = searchParams.get("account_name")
+    const accessToken = searchParams.get("access_token")
+    const expiresAt = searchParams.get("expires_at")
+
+    if (oauthError) {
+      toast.error(`Erro ao conectar: ${decodeURIComponent(oauthError)}`)
+      return
+    }
+
+    if (success === "1" && provider) {
+      setIntegrations((prev) => {
+        const updated = {
+          ...prev,
+          [provider]: {
+            ...prev[provider],
+            connected: true,
+            account_id: accountId || "",
+            account_name: accountName || "",
+            access_token: accessToken || "",
+            expires_at: expiresAt || "",
+            last_sync: "Agora mesmo",
+          },
+        }
+        localStorage.setItem(storageKey, JSON.stringify(updated))
+        return updated
+      })
+      toast.success(`${provider.replace(/_/g, " ")} conectado com sucesso!`)
+      // Clean URL
+      window.history.replaceState({}, "", `/admin/clients/${id}?tab=integrations`)
+    }
+  }, [searchParams, id, storageKey])
+
+  // OAuth connect — redirects to provider's authorization page
+  function connectOAuth(provider: string) {
+    const metaCredentials = process.env.NEXT_PUBLIC_META_APP_ID
+    const googleCredentials = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+    const stateData = btoa(JSON.stringify({ clientId: id, provider, ts: Date.now() }))
+
+    if (provider === "meta_ads" || provider === "meta_business") {
+      if (!metaCredentials) {
+        showManualConnectModal(provider)
+        return
+      }
+      const params = new URLSearchParams({
+        client_id: metaCredentials,
+        redirect_uri: `${appUrl}/api/oauth/meta/callback`,
+        scope: "ads_read,ads_management,business_management,pages_read_engagement",
+        response_type: "code",
+        state: stateData,
+      })
+      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params}`
+    } else if (provider === "google_ads" || provider === "ga4") {
+      if (!googleCredentials) {
+        showManualConnectModal(provider)
+        return
+      }
+      const scopes = [
+        provider !== "ga4" && "https://www.googleapis.com/auth/adwords",
+        "https://www.googleapis.com/auth/analytics.readonly",
+        "https://www.googleapis.com/auth/userinfo.email",
+      ].filter(Boolean).join(" ")
+      const params = new URLSearchParams({
+        client_id: googleCredentials,
+        redirect_uri: `${appUrl}/api/oauth/google/callback`,
+        scope: scopes,
+        response_type: "code",
+        access_type: "offline",
+        prompt: "consent",
+        state: stateData,
+      })
+      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+    } else if (provider === "whatsapp") {
+      if (!metaCredentials) {
+        showManualConnectModal(provider)
+        return
+      }
+      const params = new URLSearchParams({
+        client_id: metaCredentials,
+        redirect_uri: `${appUrl}/api/oauth/meta/callback`,
+        scope: "whatsapp_business_management,whatsapp_business_messaging",
+        response_type: "code",
+        state: stateData,
+      })
+      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params}`
+    } else {
+      // rd_station, google_sheets — manual token input
+      showManualConnectModal(provider)
+    }
+  }
+
+  function showManualConnectModal(provider: string) {
+    const token = prompt(
+      `Cole o token de acesso para ${provider.replace(/_/g, " ")}:\n\n(Para conexão real, configure META_APP_ID e GOOGLE_CLIENT_ID nas variáveis de ambiente)`
+    )
+    if (!token) return
+    const updated = {
+      ...integrations,
+      [provider]: {
+        ...integrations[provider],
+        connected: true,
+        access_token: token,
+        account_id: "manual",
+        account_name: "Conta configurada manualmente",
+        last_sync: "Agora mesmo",
+      },
+    }
+    setIntegrations(updated)
+    localStorage.setItem(storageKey, JSON.stringify(updated))
+    toast.success(`${provider.replace(/_/g, " ")} conectado`)
   }
 
   function handleSaveNote() {
@@ -575,7 +695,7 @@ export default function AdminClientDetailPage() {
                 name="Meta Ads"
                 description="Facebook & Instagram Ads — campanhas, conjuntos e anúncios"
                 integration={integrations.meta_ads}
-                onToggle={() => toggleIntegration("meta_ads")}
+                onToggle={() => integrations["meta_ads"].connected ? toggleIntegration("meta_ads") : connectOAuth("meta_ads")}
               />
               {/* Google Ads */}
               <IntegrationCard
@@ -583,7 +703,7 @@ export default function AdminClientDetailPage() {
                 name="Google Ads"
                 description="Campanhas de pesquisa, display, YouTube e shopping"
                 integration={integrations.google_ads}
-                onToggle={() => toggleIntegration("google_ads")}
+                onToggle={() => integrations["google_ads"].connected ? toggleIntegration("google_ads") : connectOAuth("google_ads")}
               />
               {/* GA4 */}
               <IntegrationCard
@@ -591,7 +711,7 @@ export default function AdminClientDetailPage() {
                 name="Google Analytics 4"
                 description="Tráfego orgânico, sessões, conversões e comportamento do site"
                 integration={integrations.ga4}
-                onToggle={() => toggleIntegration("ga4")}
+                onToggle={() => integrations["ga4"].connected ? toggleIntegration("ga4") : connectOAuth("ga4")}
               />
               {/* Meta Business */}
               <IntegrationCard
@@ -599,7 +719,7 @@ export default function AdminClientDetailPage() {
                 name="Meta Business Suite"
                 description="Página do Facebook, Instagram e engajamento orgânico"
                 integration={integrations.meta_business}
-                onToggle={() => toggleIntegration("meta_business")}
+                onToggle={() => integrations["meta_business"].connected ? toggleIntegration("meta_business") : connectOAuth("meta_business")}
               />
               {/* WhatsApp */}
               <IntegrationCard
@@ -607,7 +727,7 @@ export default function AdminClientDetailPage() {
                 name="WhatsApp Business"
                 description="Conversas, leads via WhatsApp e taxa de resposta"
                 integration={integrations.whatsapp}
-                onToggle={() => toggleIntegration("whatsapp")}
+                onToggle={() => integrations["whatsapp"].connected ? toggleIntegration("whatsapp") : connectOAuth("whatsapp")}
               />
               {/* RD Station */}
               <IntegrationCard
@@ -615,7 +735,7 @@ export default function AdminClientDetailPage() {
                 name="RD Station CRM"
                 description="Pipeline de vendas, oportunidades e receita gerada"
                 integration={integrations.rd_station}
-                onToggle={() => toggleIntegration("rd_station")}
+                onToggle={() => integrations["rd_station"].connected ? toggleIntegration("rd_station") : connectOAuth("rd_station")}
               />
               {/* Google Sheets */}
               <IntegrationCard
@@ -623,7 +743,7 @@ export default function AdminClientDetailPage() {
                 name="Google Sheets"
                 description="Planilha de dados customizada para importação manual"
                 integration={integrations.google_sheets}
-                onToggle={() => toggleIntegration("google_sheets")}
+                onToggle={() => integrations["google_sheets"].connected ? toggleIntegration("google_sheets") : connectOAuth("google_sheets")}
               />
               {/* MCP */}
               <div className="bg-white rounded-xl border border-gray-200 p-5">
