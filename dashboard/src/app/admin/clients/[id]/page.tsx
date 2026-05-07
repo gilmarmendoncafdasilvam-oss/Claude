@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -68,25 +68,43 @@ export default function AdminClientDetailPage() {
   )
   const [noteSaved, setNoteSaved] = useState(false)
 
-  const [integrations, setIntegrations] = useState({
-    meta_ads: { connected: true, account_id: "act_123456789", account_name: "Clínica Saúde Total - Ads", last_sync: "Há 2 horas" },
-    google_ads: { connected: true, account_id: "AW-987654321", account_name: "Saúde Total Google Ads", last_sync: "Há 3 horas" },
-    ga4: { connected: true, account_id: "G-ABC123XYZ", account_name: "Saúde Total - GA4", last_sync: "Há 1 hora" },
+  type IntegrationMap = Record<string, { connected: boolean; account_id: string; account_name: string; last_sync: string }>
+
+  const defaultIntegrations = (clientId: string): IntegrationMap => ({
+    meta_ads: { connected: clientId === "c1", account_id: "act_123456789", account_name: "Clínica Saúde Total - Ads", last_sync: "Há 2 horas" },
+    google_ads: { connected: clientId === "c1", account_id: "AW-987654321", account_name: "Saúde Total Google Ads", last_sync: "Há 3 horas" },
+    ga4: { connected: clientId === "c1" || clientId === "c2", account_id: "G-ABC123XYZ", account_name: "Analytics - GA4", last_sync: "Há 1 hora" },
     meta_business: { connected: false, account_id: "", account_name: "", last_sync: "" },
-    whatsapp: { connected: true, account_id: "+55 11 99999-0000", account_name: "WhatsApp Business", last_sync: "Há 30 min" },
+    whatsapp: { connected: clientId === "c1", account_id: "+55 11 99999-0000", account_name: "WhatsApp Business", last_sync: "Há 30 min" },
     rd_station: { connected: false, account_id: "", account_name: "", last_sync: "" },
     google_sheets: { connected: false, account_id: "", account_name: "", last_sync: "" },
   })
 
+  const storageKey = `integrations_${id}`
+
+  const [integrations, setIntegrations] = useState<IntegrationMap>(() => {
+    if (typeof window === "undefined") return defaultIntegrations(id)
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return saved ? JSON.parse(saved) : defaultIntegrations(id)
+    } catch {
+      return defaultIntegrations(id)
+    }
+  })
+
   function toggleIntegration(key: string) {
     setIntegrations((prev) => {
-      const curr = prev[key as keyof typeof prev]
+      const curr = prev[key]
       const wasConnected = curr.connected
-      toast[wasConnected ? "info" : "success"](wasConnected ? `${key} desconectado` : `${key} conectado com sucesso`)
-      return {
+      const updated = {
         ...prev,
         [key]: { ...curr, connected: !wasConnected, last_sync: !wasConnected ? "Agora mesmo" : "" },
       }
+      localStorage.setItem(storageKey, JSON.stringify(updated))
+      toast[wasConnected ? "info" : "success"](
+        wasConnected ? `${key.replace(/_/g, " ")} desconectado` : `${key.replace(/_/g, " ")} conectado com sucesso`
+      )
+      return updated
     })
   }
 
@@ -159,11 +177,9 @@ export default function AdminClientDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/client/dashboard">
-              <ExternalLink className="h-4 w-4" />
-              Ver como Cliente
-            </Link>
+          <Button variant="outline" onClick={() => window.open("/client/dashboard", "_blank")}>
+            <ExternalLink className="h-4 w-4" />
+            Ver como Cliente
           </Button>
           <Button asChild>
             <Link href={`/admin/clients/${id}/edit`}>

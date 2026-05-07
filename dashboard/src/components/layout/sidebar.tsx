@@ -56,13 +56,13 @@ const clientNav: NavItem[] = [
   { href: "/client/action-plan", label: "Plano de Ação", icon: CheckSquare },
 ]
 
-// Member sees same as admin, minus Users and Configurações
+// Member sees same as admin, minus Users and Configurações — own /member/* URLs
 const memberNav: NavItem[] = [
-  { href: "/admin", label: "Visão Geral", icon: LayoutDashboard },
-  { href: "/admin/clients", label: "Clientes", icon: Building2 },
-  { href: "/admin/reports", label: "Relatórios", icon: FileBarChart },
-  { href: "/admin/import", label: "Importar Dados", icon: Upload },
-  { href: "/admin/integrations", label: "Integrações", icon: Zap },
+  { href: "/member", label: "Visão Geral", icon: LayoutDashboard },
+  { href: "/member/clients", label: "Clientes", icon: Building2 },
+  { href: "/member/reports", label: "Relatórios", icon: FileBarChart },
+  { href: "/member/import", label: "Importar Dados", icon: Upload },
+  { href: "/member/integrations", label: "Integrações", icon: Zap },
 ]
 
 interface SidebarProps {

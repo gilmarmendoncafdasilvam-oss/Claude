@@ -55,8 +55,10 @@ export default function LoginPage() {
       sessionStorage.setItem("user", JSON.stringify(sessionUser))
     }
 
-    if (user.role === "admin" || user.role === "member") {
+    if (user.role === "admin") {
       router.push("/admin")
+    } else if (user.role === "member") {
+      router.push("/member")
     } else {
       router.push("/client/dashboard")
     }

@@ -77,10 +77,16 @@ export default function NewUserPage() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Administrador – Acesso total</SelectItem>
+                    <SelectItem value="member">Membro / Funcionário – Mesmo painel do admin (sem Usuários e Configurações)</SelectItem>
                     <SelectItem value="client">Cliente – Acesso ao próprio dashboard</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+              {form.role === "member" && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                  O membro terá acesso à visão de clientes, relatórios, importação e integrações — igual ao admin, mas sem a gestão de usuários e configurações.
+                </div>
+              )}
               {form.role === "client" && (
                 <div className="space-y-1.5">
                   <Label>Vincular ao Cliente *</Label>

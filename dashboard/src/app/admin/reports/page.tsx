@@ -96,8 +96,10 @@ export default function ReportsPage() {
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/admin/reports/${report.id}/edit`}><Edit className="h-3.5 w-3.5" /></Link>
                     </Button>
-                    <Button variant="ghost" size="sm">
-                      <Download className="h-3.5 w-3.5" />
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/admin/reports/${report.id}/print`} target="_blank" title="Exportar PDF">
+                        <Download className="h-3.5 w-3.5" />
+                      </Link>
                     </Button>
                   </div>
                 </div>

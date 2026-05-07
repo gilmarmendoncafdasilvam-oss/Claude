@@ -1,23 +1,38 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Sidebar } from "@/components/layout/sidebar"
 
 export default function MemberLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const [userName, setUserName] = useState("")
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    // Members now use the admin layout/pages — redirect to /admin
     const userData = sessionStorage.getItem("user")
     if (!userData) {
       router.push("/login")
       return
     }
     const user = JSON.parse(userData)
-    if (user.role === "member") {
-      router.replace("/admin")
+    if (user.role !== "member") {
+      if (user.role === "admin") router.push("/admin")
+      else router.push("/client/dashboard")
+      return
     }
+    setUserName(user.name)
+    setReady(true)
   }, [router])
 
-  return <>{children}</>
+  if (!ready) return null
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar role="member" userName={userName} />
+      <main className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="p-4 pt-16 lg:p-8 max-w-screen-2xl mx-auto">{children}</div>
+      </main>
+    </div>
+  )
 }
