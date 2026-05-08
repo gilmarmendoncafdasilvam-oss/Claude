@@ -1,3 +1,19 @@
+export type ClientEmployeePermission =
+  | "leads.view"
+  | "leads.view_all"
+  | "leads.create"
+  | "leads.edit"
+  | "leads.mark_sale"
+  | "leads.mark_lost"
+
+export const CLIENT_EMPLOYEE_DEFAULT_PERMISSIONS: ClientEmployeePermission[] = [
+  "leads.view",
+  "leads.create",
+  "leads.edit",
+  "leads.mark_sale",
+  "leads.mark_lost",
+]
+
 export type MemberPermission =
   | "clients.view"
   | "clients.create"

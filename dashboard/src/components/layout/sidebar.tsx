@@ -24,6 +24,9 @@ import {
   Zap,
   Menu,
   X,
+  UserCheck,
+  Kanban,
+  ShoppingCart,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
@@ -38,6 +41,7 @@ const adminNav: NavItem[] = [
   { href: "/admin", label: "Visão Geral", icon: LayoutDashboard },
   { href: "/admin/clients", label: "Clientes", icon: Building2 },
   { href: "/admin/users", label: "Usuários", icon: Users },
+  { href: "/admin/leads", label: "Central de Leads", icon: UserCheck },
   { href: "/admin/reports", label: "Relatórios", icon: FileBarChart },
   { href: "/admin/import", label: "Importar Dados", icon: Upload },
   { href: "/admin/integrations", label: "Integrações", icon: Zap },
@@ -46,6 +50,9 @@ const adminNav: NavItem[] = [
 
 const clientNav: NavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/client/sales-dashboard", label: "Central Comercial", icon: ShoppingCart },
+  { href: "/client/leads", label: "Leads", icon: UserCheck },
+  { href: "/client/leads/kanban", label: "Kanban Comercial", icon: Kanban },
   { href: "/client/google-ads", label: "Google Ads", icon: Target },
   { href: "/client/meta-ads", label: "Meta Ads", icon: TrendingUp },
   { href: "/client/ga4", label: "Site / GA4", icon: Globe },
@@ -54,6 +61,12 @@ const clientNav: NavItem[] = [
   { href: "/client/financial", label: "Financeiro", icon: DollarSign },
   { href: "/client/diagnostic", label: "Diagnóstico", icon: Brain },
   { href: "/client/action-plan", label: "Plano de Ação", icon: CheckSquare },
+]
+
+const clientEmployeeNav: NavItem[] = [
+  { href: "/client/leads", label: "Meus Leads", icon: UserCheck },
+  { href: "/client/leads/kanban", label: "Kanban Comercial", icon: Kanban },
+  { href: "/client/leads/new", label: "Cadastrar Lead", icon: ShoppingCart },
 ]
 
 // Member sees same as admin, minus Users and Configurações — own /member/* URLs
@@ -66,7 +79,7 @@ const memberNav: NavItem[] = [
 ]
 
 interface SidebarProps {
-  role: "admin" | "client" | "member"
+  role: "admin" | "client" | "member" | "client_employee"
   clientName?: string
   userName?: string
 }
@@ -80,7 +93,7 @@ function NavContent({
   onNavClick,
 }: SidebarProps & { collapsed: boolean; setCollapsed: (v: boolean) => void; onNavClick?: () => void }) {
   const pathname = usePathname()
-  const navItems = role === "admin" ? adminNav : role === "member" ? memberNav : clientNav
+  const navItems = role === "admin" ? adminNav : role === "member" ? memberNav : role === "client_employee" ? clientEmployeeNav : clientNav
 
   return (
     <div className="flex flex-col h-full">

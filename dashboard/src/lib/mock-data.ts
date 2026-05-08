@@ -11,6 +11,7 @@ import type {
   FinancialMetrics,
   Diagnostic,
   ActionPlan,
+  Lead,
 } from "./types"
 
 export const mockClients: Client[] = [
@@ -539,4 +540,39 @@ export const mockUsers: User[] = [
     updated_at: "2024-05-01T08:00:00Z",
     last_login: "2024-05-02T09:00:00Z",
   },
+  {
+    id: "ce1",
+    name: "Fernanda Costa",
+    email: "fernanda@saudetotal.com.br",
+    role: "client_employee",
+    client_id: "c1",
+    created_at: "2024-03-01T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+  },
+  {
+    id: "ce2",
+    name: "Rafael Souza",
+    email: "rafael@saudetotal.com.br",
+    role: "client_employee",
+    client_id: "c1",
+    created_at: "2024-03-10T10:00:00Z",
+    updated_at: "2024-05-01T08:00:00Z",
+  },
+]
+
+export const mockLeads: Lead[] = [
+  { id: "l1", client_id: "c1", name: "Juliana Martins", phone: "(11) 99201-4411", email: "juliana@email.com", origin: "Meta Ads", campaign: "Botox_Resultado_ABR", product_interest: "Botox", responsible_name: "Fernanda Costa", status: "venda_realizada", qualification: "muito_qualificado", sale_value: 1200, sale_date: "2024-04-18", sale_product: "Botox Testa", created_at: "2024-04-10T09:00:00Z", updated_at: "2024-04-18T14:00:00Z" },
+  { id: "l2", client_id: "c1", name: "Carlos Eduardo", phone: "(11) 98877-3322", origin: "Google Ads", campaign: "Clínica_Estetica_Busca", product_interest: "Preenchimento", responsible_name: "Rafael Souza", status: "proposta_enviada", qualification: "qualificado", created_at: "2024-04-12T10:00:00Z", updated_at: "2024-04-14T11:00:00Z" },
+  { id: "l3", client_id: "c1", name: "Mariana Ferreira", phone: "(11) 97654-8899", origin: "Meta Ads", campaign: "Botox_Resultado_ABR", product_interest: "Botox", responsible_name: "Fernanda Costa", status: "em_atendimento", qualification: "qualificado", next_action: "Ligar e agendar avaliação", next_action_date: "2024-04-20", created_at: "2024-04-15T08:30:00Z", updated_at: "2024-04-15T09:00:00Z" },
+  { id: "l4", client_id: "c1", name: "Pedro Alves", phone: "(11) 96543-1122", origin: "WhatsApp", product_interest: "Consultoria", responsible_name: "Rafael Souza", status: "perdido", qualification: "pouco_qualificado", loss_reason: "preco_alto", loss_reason_detail: "Achou o valor acima do esperado", created_at: "2024-04-08T11:00:00Z", updated_at: "2024-04-11T15:00:00Z" },
+  { id: "l5", client_id: "c1", name: "Tatiana Oliveira", phone: "(11) 95432-7788", origin: "Meta Ads", campaign: "Video_Resultado_Skin", product_interest: "Skincare", responsible_name: "Fernanda Costa", status: "novo", created_at: "2024-04-20T07:00:00Z", updated_at: "2024-04-20T07:00:00Z" },
+  { id: "l6", client_id: "c1", name: "Bruno Lima", phone: "(11) 94321-5566", email: "bruno@email.com", origin: "Indicação", product_interest: "Botox", responsible_name: "Fernanda Costa", status: "venda_realizada", qualification: "muito_qualificado", sale_value: 950, sale_date: "2024-04-22", sale_product: "Botox Sobrancelha", created_at: "2024-04-16T09:00:00Z", updated_at: "2024-04-22T16:00:00Z" },
+  { id: "l7", client_id: "c1", name: "Luciana Santos", phone: "(11) 93210-4455", origin: "Google Ads", campaign: "Clínica_Estetica_Busca", product_interest: "Preenchimento Labial", responsible_name: "Rafael Souza", status: "desqualificado", qualification: "desqualificado", loss_reason: "fora_da_regiao", created_at: "2024-04-14T14:00:00Z", updated_at: "2024-04-14T16:00:00Z" },
+  { id: "l8", client_id: "c1", name: "Ricardo Nunes", phone: "(11) 92109-3344", origin: "Meta Ads", campaign: "Botox_Resultado_ABR", product_interest: "Botox", status: "sem_resposta", created_at: "2024-04-18T10:00:00Z", updated_at: "2024-04-20T08:00:00Z" },
+  { id: "l9", client_id: "c1", name: "Aline Costa", phone: "(11) 91098-2233", origin: "Site", product_interest: "Consultoria Estética", responsible_name: "Fernanda Costa", status: "qualificado", qualification: "qualificado", next_action: "Enviar proposta", next_action_date: "2024-04-21", created_at: "2024-04-17T13:00:00Z", updated_at: "2024-04-19T10:00:00Z" },
+  { id: "l10", client_id: "c1", name: "Fábio Mendes", phone: "(11) 99887-1122", origin: "Meta Ads", campaign: "Video_Botox_Resultado", product_interest: "Botox", responsible_name: "Rafael Souza", status: "perdido", qualification: "qualificado", loss_reason: "comprou_concorrente", created_at: "2024-04-11T09:00:00Z", updated_at: "2024-04-15T11:00:00Z" },
+  { id: "l11", client_id: "c1", name: "Camila Rocha", phone: "(11) 98876-0011", origin: "Meta Ads", campaign: "Botox_Resultado_ABR", product_interest: "Botox", responsible_name: "Fernanda Costa", status: "venda_realizada", qualification: "muito_qualificado", sale_value: 1800, sale_date: "2024-04-25", sale_product: "Botox Full Face", created_at: "2024-04-19T08:00:00Z", updated_at: "2024-04-25T15:00:00Z" },
+  { id: "l12", client_id: "c1", name: "Diego Carvalho", phone: "(11) 97765-9900", origin: "Google Ads", campaign: "Clínica_Geral_Busca", product_interest: "Consulta Geral", status: "novo", created_at: "2024-04-21T11:00:00Z", updated_at: "2024-04-21T11:00:00Z" },
+  { id: "l13", client_id: "c2", name: "Rodrigo Pinto", phone: "(19) 99123-4455", origin: "Meta Ads", campaign: "Academia_Matricula", product_interest: "Plano Mensal", status: "venda_realizada", qualification: "qualificado", sale_value: 120, sale_date: "2024-04-17", created_at: "2024-04-10T09:00:00Z", updated_at: "2024-04-17T12:00:00Z" },
+  { id: "l14", client_id: "c2", name: "Priscila Gomes", phone: "(19) 98234-5566", origin: "Instagram", product_interest: "Plano Anual", status: "proposta_enviada", qualification: "muito_qualificado", created_at: "2024-04-18T10:00:00Z", updated_at: "2024-04-19T09:00:00Z" },
 ]

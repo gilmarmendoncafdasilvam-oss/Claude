@@ -1,4 +1,60 @@
-export type UserRole = "admin" | "client" | "member"
+export type UserRole = "admin" | "client" | "member" | "client_employee"
+
+export type LeadStatus =
+  | "novo"
+  | "em_atendimento"
+  | "qualificado"
+  | "proposta_enviada"
+  | "venda_realizada"
+  | "perdido"
+  | "desqualificado"
+  | "sem_resposta"
+
+export type LeadQualification =
+  | "muito_qualificado"
+  | "qualificado"
+  | "pouco_qualificado"
+  | "desqualificado"
+
+export type LossReason =
+  | "preco_alto"
+  | "nao_respondeu"
+  | "fora_da_regiao"
+  | "sem_orcamento"
+  | "comprou_concorrente"
+  | "nao_era_perfil"
+  | "lead_duplicado"
+  | "atendimento_demorou"
+  | "sem_interesse_real"
+  | "outro"
+
+export interface Lead {
+  id: string
+  client_id: string
+  name: string
+  phone?: string
+  email?: string
+  origin?: string
+  campaign?: string
+  ad_set?: string
+  ad?: string
+  product_interest?: string
+  responsible_id?: string
+  responsible_name?: string
+  status: LeadStatus
+  qualification?: LeadQualification
+  loss_reason?: LossReason
+  loss_reason_detail?: string
+  sale_value?: number
+  sale_date?: string
+  sale_product?: string
+  sale_observation?: string
+  notes?: string
+  next_action?: string
+  next_action_date?: string
+  created_at: string
+  updated_at: string
+}
 
 export type MemberRole = "gestor" | "analista" | "funcionario" | "visualizador"
 
