@@ -86,7 +86,7 @@ export default function LoginPage() {
         </div>
         <div>
           <blockquote className="text-2xl font-semibold text-white leading-relaxed mb-6">
-            "Seus resultados de marketing em um único lugar. Dados + diagnóstico + plano de ação."
+            &ldquo;Seus resultados de marketing em um único lugar. Dados + diagnóstico + plano de ação.&rdquo;
           </blockquote>
           <div className="grid grid-cols-3 gap-4">
             {[

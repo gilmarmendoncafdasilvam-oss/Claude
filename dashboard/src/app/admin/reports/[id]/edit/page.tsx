@@ -53,7 +53,7 @@ export default function EditReportPage() {
       <div className="text-center py-16">
         <FileBarChart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p className="text-lg font-medium text-gray-900">Relatório não encontrado</p>
-        <p className="text-sm text-gray-500 mt-1">O relatório com ID "{id}" não existe.</p>
+        <p className="text-sm text-gray-500 mt-1">O relatório com ID &quot;{id}&quot; não existe.</p>
         <Button variant="outline" className="mt-4" asChild>
           <Link href={`${basePath}/reports`}>Voltar para Relatórios</Link>
         </Button>

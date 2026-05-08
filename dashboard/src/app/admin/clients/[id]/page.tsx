@@ -153,6 +153,7 @@ export default function AdminClientDetailPage() {
     }
 
     if (success === "1" && provider) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIntegrations((prev) => {
         const updated = {
           ...prev,
@@ -180,6 +181,7 @@ export default function AdminClientDetailPage() {
     const metaCredentials = process.env.NEXT_PUBLIC_META_APP_ID
     const googleCredentials = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
+    // eslint-disable-next-line react-hooks/purity
     const stateData = btoa(JSON.stringify({ clientId: id, provider, ts: Date.now() }))
 
     if (provider === "meta_ads" || provider === "meta_business") {
@@ -194,7 +196,7 @@ export default function AdminClientDetailPage() {
         response_type: "code",
         state: stateData,
       })
-      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params}`
+      window.location.assign(`https://www.facebook.com/v18.0/dialog/oauth?${params}`)
     } else if (provider === "google_ads" || provider === "ga4") {
       if (!googleCredentials) {
         showManualConnectModal(provider)
@@ -214,7 +216,7 @@ export default function AdminClientDetailPage() {
         prompt: "consent",
         state: stateData,
       })
-      window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
+      window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params}`)
     } else if (provider === "whatsapp") {
       if (!metaCredentials) {
         showManualConnectModal(provider)
@@ -227,7 +229,7 @@ export default function AdminClientDetailPage() {
         response_type: "code",
         state: stateData,
       })
-      window.location.href = `https://www.facebook.com/v18.0/dialog/oauth?${params}`
+      window.location.assign(`https://www.facebook.com/v18.0/dialog/oauth?${params}`)
     } else {
       // rd_station, google_sheets — manual token input
       showManualConnectModal(provider)

@@ -1,40 +1,34 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { mockClients } from "@/lib/mock-data"
+import { useSessionUser } from "@/hooks/use-session-user"
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [clientName, setClientName] = useState("")
-  const [userName, setUserName] = useState("")
+  const { user, loaded } = useSessionUser()
 
   useEffect(() => {
-    const userData = sessionStorage.getItem("user")
-    if (!userData) {
+    if (!loaded) return
+    if (!user) {
       router.push("/login")
-      return
-    }
-    const user = JSON.parse(userData)
-    if (user.role !== "client") {
+    } else if (user.role !== "client") {
       router.push("/admin")
-      return
     }
-    setUserName(user.name)
-    if (user.clientId) {
-      const client = mockClients.find((c) => c.id === user.clientId)
-      setClientName(client?.trade_name || client?.company_name || "")
-    }
-  }, [router])
+  }, [user, loaded, router])
+
+  if (!loaded || !user || user.role !== "client") return null
+
+  const client = user.clientId ? mockClients.find((c) => c.id === user.clientId) : undefined
+  const clientName = client?.trade_name || client?.company_name || ""
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar role="client" clientName={clientName} userName={userName} />
+      <Sidebar role="client" clientName={clientName} userName={user.name ?? ""} />
       <main className="flex-1 overflow-y-auto bg-gray-50">
-        <div className="p-4 pt-16 lg:p-8 max-w-screen-2xl mx-auto">
-          {children}
-        </div>
+        <div className="p-4 pt-16 lg:p-8 max-w-screen-2xl mx-auto">{children}</div>
       </main>
     </div>
   )

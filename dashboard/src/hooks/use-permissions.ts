@@ -1,22 +1,44 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
+
+const SUBSCRIBERS = new Set<() => void>()
+
+function subscribe(callback: () => void) {
+  SUBSCRIBERS.add(callback)
+  const onStorage = () => callback()
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage)
+  }
+  return () => {
+    SUBSCRIBERS.delete(callback)
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage)
+    }
+  }
+}
+
+function getSnapshot() {
+  if (typeof window === "undefined") return ""
+  return sessionStorage.getItem("user") ?? ""
+}
+
+function getServerSnapshot() {
+  return ""
+}
+
+type SessionUser = {
+  permissions?: string[]
+  role?: string
+  member_role?: string
+  assigned_clients?: string[]
+}
 
 export function usePermissions() {
-  const [permissions, setPermissions] = useState<string[]>([])
-  const [userRole, setUserRole] = useState<string>("")
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userData = sessionStorage.getItem("user")
-      if (userData) {
-        const user = JSON.parse(userData)
-        setPermissions(user.permissions || [])
-        setUserRole(user.role || "")
-      }
-      setLoaded(true)
-    }
-  }, [])
+  const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  const user: SessionUser | null = raw ? safeParse(raw) : null
+  const userRole = user?.role ?? ""
+  const permissions = user?.permissions ?? []
+  const loaded = typeof window !== "undefined"
 
   const can = (permission: string): boolean => {
     if (userRole === "admin") return true
@@ -24,4 +46,12 @@ export function usePermissions() {
   }
 
   return { can, permissions, userRole, loaded }
+}
+
+function safeParse(s: string): SessionUser | null {
+  try {
+    return JSON.parse(s)
+  } catch {
+    return null
+  }
 }

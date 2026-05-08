@@ -65,7 +65,7 @@ export default function EditClientPage() {
       <div className="text-center py-16">
         <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p className="text-lg font-medium text-gray-900">Cliente não encontrado</p>
-        <p className="text-sm text-gray-500 mt-1">O cliente com ID "{id}" não existe.</p>
+        <p className="text-sm text-gray-500 mt-1">O cliente com ID &quot;{id}&quot; não existe.</p>
         <Button variant="outline" className="mt-4" asChild>
           <Link href={`${basePath}/clients`}>Voltar para Clientes</Link>
         </Button>

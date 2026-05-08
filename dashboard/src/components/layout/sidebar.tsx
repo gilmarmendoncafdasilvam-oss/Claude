@@ -26,7 +26,7 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 
 interface NavItem {
   href: string
@@ -167,11 +167,13 @@ function NavContent({
 export function Sidebar({ role, clientName, userName }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [lastPathname, setLastPathname] = useState<string | null>(null)
   const pathname = usePathname()
 
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
+    if (mobileOpen) setMobileOpen(false)
+  }
 
   return (
     <>

@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
+import { useSessionUser } from "@/hooks/use-session-user"
 import { CheckCircle2, Clock, Circle, Eye, EyeOff, AlertTriangle, Send } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,23 +27,14 @@ const statusColors = {
 
 export default function MemberActionPlanPage() {
   const { can, loaded } = usePermissions()
-  const [actions, setActions] = useState<ActionPlan[]>([])
-  const [assignedClientIds, setAssignedClientIds] = useState<string[]>([])
+  const { user: sessionUser } = useSessionUser()
+  const found = sessionUser?.email ? mockUsers.find((u) => u.email === sessionUser.email) : undefined
+  const assignedClientIds: string[] = found?.assigned_clients || []
+  const initialFiltered = mockActionPlans.filter((a) => assignedClientIds.includes(a.client_id))
+  const [actions, setActions] = useState<ActionPlan[]>(initialFiltered)
   const [editingComment, setEditingComment] = useState<string | null>(null)
   const [commentDraft, setCommentDraft] = useState("")
-  const [publishedCount, setPublishedCount] = useState(0)
-
-  useEffect(() => {
-    const userData = sessionStorage.getItem("user")
-    if (!userData) return
-    const user = JSON.parse(userData)
-    const found = mockUsers.find((u) => u.email === user.email)
-    const ids = found?.assigned_clients || []
-    setAssignedClientIds(ids)
-    const filtered = mockActionPlans.filter((a) => ids.includes(a.client_id))
-    setActions(filtered)
-    setPublishedCount(filtered.filter((a) => a.published_to_client).length)
-  }, [])
+  const publishedCount = actions.filter((a) => a.published_to_client).length
 
   function toggleValidated(id: string) {
     setActions((prev) =>
@@ -53,7 +45,6 @@ export default function MemberActionPlanPage() {
   function togglePublished(id: string) {
     setActions((prev) => {
       const updated = prev.map((a) => (a.id === id ? { ...a, published_to_client: !a.published_to_client } : a))
-      setPublishedCount(updated.filter((a) => a.published_to_client).length)
       const action = updated.find((a) => a.id === id)
       if (action?.published_to_client) toast.success("Ação publicada para o cliente")
       else toast.info("Ação despublicada")
@@ -86,7 +77,6 @@ export default function MemberActionPlanPage() {
     setActions((prev) => {
       const updated = prev.map((a) => (a.validated ? { ...a, published_to_client: true } : a))
       const count = updated.filter((a) => a.published_to_client && a.validated).length
-      setPublishedCount(updated.filter((a) => a.published_to_client).length)
       toast.success(`${count} ação(ões) publicadas para os clientes`)
       return updated
     })
