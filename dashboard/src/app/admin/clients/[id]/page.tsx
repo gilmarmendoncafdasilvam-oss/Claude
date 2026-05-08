@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams, useSearchParams, usePathname } from "next/navigation"
 import Link from "next/link"
 import { toast } from "sonner"
 import {
@@ -62,6 +62,8 @@ const DEFAULT_ACTIVITY = [
 export default function AdminClientDetailPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const basePath = pathname.startsWith("/member") ? "/member" : "/admin"
   const id = params.id as string
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
@@ -169,7 +171,7 @@ export default function AdminClientDetailPage() {
       })
       toast.success(`${provider.replace(/_/g, " ")} conectado com sucesso!`)
       // Clean URL
-      window.history.replaceState({}, "", `/admin/clients/${id}?tab=integrations`)
+      window.history.replaceState({}, "", `${basePath}/clients/${id}?tab=integrations`)
     }
   }, [searchParams, id, storageKey])
 
@@ -273,7 +275,7 @@ export default function AdminClientDetailPage() {
         <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p className="text-lg font-medium text-gray-900">Cliente não encontrado</p>
         <Button variant="outline" className="mt-4" asChild>
-          <Link href="/admin/clients">Voltar para Clientes</Link>
+          <Link href={`${basePath}/clients`}>Voltar para Clientes</Link>
         </Button>
       </div>
     )
@@ -298,7 +300,7 @@ export default function AdminClientDetailPage() {
     <div>
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/admin/clients">
+          <Link href={`${basePath}/clients`}>
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
@@ -327,7 +329,7 @@ export default function AdminClientDetailPage() {
             Ver como Cliente
           </Button>
           <Button asChild>
-            <Link href={`/admin/clients/${id}/edit`}>
+            <Link href={`${basePath}/clients/${id}/edit`}>
               <Edit className="h-4 w-4" />
               Editar
             </Link>
@@ -491,7 +493,7 @@ export default function AdminClientDetailPage() {
                 <div className="px-6 py-12 text-center text-gray-500">
                   <p>Nenhum relatório criado para este cliente ainda</p>
                   <Button className="mt-4" asChild>
-                    <Link href="/admin/reports/new">Criar Relatório</Link>
+                    <Link href={`${basePath}/reports/new`}>Criar Relatório</Link>
                   </Button>
                 </div>
               ) : (
@@ -507,7 +509,7 @@ export default function AdminClientDetailPage() {
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">{report.report_type}</Badge>
                         <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/admin/reports/${report.id}`}>Ver</Link>
+                          <Link href={`${basePath}/reports/${report.id}`}>Ver</Link>
                         </Button>
                       </div>
                     </div>
@@ -555,7 +557,7 @@ export default function AdminClientDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Informações do Cliente</CardTitle>
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/admin/clients/${id}/edit`}>
+                <Link href={`${basePath}/clients/${id}/edit`}>
                   <Edit className="h-4 w-4" />
                   Editar
                 </Link>

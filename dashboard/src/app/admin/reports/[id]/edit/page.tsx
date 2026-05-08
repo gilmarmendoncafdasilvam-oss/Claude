@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Save, Loader2, FileBarChart } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +17,8 @@ export default function EditReportPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
   const router = useRouter()
+  const pathname = usePathname()
+  const basePath = pathname.startsWith("/member") ? "/member" : "/admin"
 
   const report = mockReports.find((r) => r.id === id)
   const client = report ? mockClients.find((c) => c.id === report.client_id) : undefined
@@ -43,7 +45,7 @@ export default function EditReportPage() {
     await new Promise((r) => setTimeout(r, 800))
     setLoading(false)
     toast.success("Relatório atualizado com sucesso")
-    router.push(`/admin/reports/${id}`)
+    router.push(`${basePath}/reports/${id}`)
   }
 
   if (!report) {
@@ -53,7 +55,7 @@ export default function EditReportPage() {
         <p className="text-lg font-medium text-gray-900">Relatório não encontrado</p>
         <p className="text-sm text-gray-500 mt-1">O relatório com ID "{id}" não existe.</p>
         <Button variant="outline" className="mt-4" asChild>
-          <Link href="/admin/reports">Voltar para Relatórios</Link>
+          <Link href={`${basePath}/reports`}>Voltar para Relatórios</Link>
         </Button>
       </div>
     )
@@ -63,7 +65,7 @@ export default function EditReportPage() {
     <div>
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/admin/reports/${id}`}>
+          <Link href={`${basePath}/reports/${id}`}>
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
@@ -213,7 +215,7 @@ export default function EditReportPage() {
             </Button>
 
             <Button type="button" variant="outline" className="w-full" asChild>
-              <Link href={`/admin/reports/${id}`}>Cancelar</Link>
+              <Link href={`${basePath}/reports/${id}`}>Cancelar</Link>
             </Button>
           </div>
         </div>

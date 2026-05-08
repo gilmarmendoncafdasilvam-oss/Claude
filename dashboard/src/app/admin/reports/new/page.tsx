@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Save, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,6 +14,8 @@ import { mockClients } from "@/lib/mock-data"
 
 export default function NewReportPage() {
   const router = useRouter()
+  const pathname = usePathname()
+  const basePath = pathname.startsWith("/member") ? "/member" : "/admin"
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     client_id: "", report_type: "mensal", title: "",
@@ -30,14 +32,14 @@ export default function NewReportPage() {
     setLoading(true)
     await new Promise((r) => setTimeout(r, 800))
     setLoading(false)
-    router.push("/admin/reports")
+    router.push(`${basePath}/reports`)
   }
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/admin/reports"><ArrowLeft className="h-4 w-4" /></Link>
+          <Link href={`${basePath}/reports`}><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Novo Relatório</h1>

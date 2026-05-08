@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import Link from "next/link"
 import { FileBarChart, ArrowLeft, Printer, Edit, TrendingUp, AlertTriangle, CheckCircle2, ArrowRight, Download } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -19,6 +19,8 @@ const typeLabels: Record<string, string> = {
 
 export default function AdminReportDetailPage() {
   const params = useParams()
+  const pathname = usePathname()
+  const basePath = pathname.startsWith("/member") ? "/member" : "/admin"
   const id = params.id as string
 
   const report = mockReports.find((r) => r.id === id)
@@ -30,7 +32,7 @@ export default function AdminReportDetailPage() {
         <FileBarChart className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p className="text-lg font-medium text-gray-900">Relatório não encontrado</p>
         <Button variant="outline" className="mt-4" asChild>
-          <Link href="/admin/reports">Voltar para Relatórios</Link>
+          <Link href={`${basePath}/reports`}>Voltar para Relatórios</Link>
         </Button>
       </div>
     )
@@ -47,14 +49,14 @@ export default function AdminReportDetailPage() {
   const avgROAS = metrics.length > 0 ? metrics.reduce((s, m) => s + (m.roas || 0), 0) / metrics.length : 0
 
   function exportPDF() {
-    window.open(`/admin/reports/${id}/print`, "_blank")
+    window.open(`${basePath}/reports/${id}/print`, "_blank")
   }
 
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/admin/reports">
+          <Link href={`${basePath}/reports`}>
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
@@ -88,7 +90,7 @@ export default function AdminReportDetailPage() {
             {isPublished ? "Marcar como Rascunho" : "Publicar"}
           </Button>
           <Button variant="outline" asChild>
-            <Link href={`/admin/reports/${id}/edit`}>
+            <Link href={`${basePath}/reports/${id}/edit`}>
               <Edit className="h-4 w-4" />
               Editar
             </Link>

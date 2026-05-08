@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Save, Loader2, Building2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,6 +29,8 @@ export default function EditClientPage() {
   const params = useParams<{ id: string }>()
   const id = params.id
   const router = useRouter()
+  const pathname = usePathname()
+  const basePath = pathname.startsWith("/member") ? "/member" : "/admin"
 
   const client = mockClients.find((c) => c.id === id)
 
@@ -55,7 +57,7 @@ export default function EditClientPage() {
     await new Promise((r) => setTimeout(r, 800))
     setLoading(false)
     toast.success("Cliente atualizado com sucesso")
-    router.push(`/admin/clients/${id}`)
+    router.push(`${basePath}/clients/${id}`)
   }
 
   if (!client) {
@@ -65,7 +67,7 @@ export default function EditClientPage() {
         <p className="text-lg font-medium text-gray-900">Cliente não encontrado</p>
         <p className="text-sm text-gray-500 mt-1">O cliente com ID "{id}" não existe.</p>
         <Button variant="outline" className="mt-4" asChild>
-          <Link href="/admin/clients">Voltar para Clientes</Link>
+          <Link href={`${basePath}/clients`}>Voltar para Clientes</Link>
         </Button>
       </div>
     )
@@ -75,7 +77,7 @@ export default function EditClientPage() {
     <div>
       <div className="flex items-center gap-3 mb-6">
         <Button variant="ghost" size="sm" asChild>
-          <Link href={`/admin/clients/${id}`}>
+          <Link href={`${basePath}/clients/${id}`}>
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Link>
@@ -224,7 +226,7 @@ export default function EditClientPage() {
             </Button>
 
             <Button type="button" variant="outline" className="w-full" asChild>
-              <Link href={`/admin/clients/${id}`}>Cancelar</Link>
+              <Link href={`${basePath}/clients/${id}`}>Cancelar</Link>
             </Button>
           </div>
         </div>
