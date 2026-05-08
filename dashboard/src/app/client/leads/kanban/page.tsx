@@ -1,13 +1,13 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useRef, useState, useEffect } from "react"
 import Link from "next/link"
 import { Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { mockLeads } from "@/lib/mock-data"
+import { useLeads } from "@/lib/leads-context"
 import { useSessionUser } from "@/hooks/use-session-user"
 import { LEAD_STATUS_LABELS, LEAD_STATUS_KANBAN } from "@/lib/leads"
-import type { LeadStatus, Lead } from "@/lib/types"
+import type { LeadStatus } from "@/lib/types"
 import { toast } from "sonner"
 
 const COLUMN_COLORS: Record<string, string> = {
@@ -31,17 +31,20 @@ const COLUMN_DRAG_OVER: Record<string, string> = {
 export default function LeadsKanbanPage() {
   const { user } = useSessionUser()
   const clientId = user?.clientId
-  const [leads, setLeads] = useState<Lead[]>(
-    mockLeads.filter((l) => clientId ? l.client_id === clientId : true)
-  )
+  const { leads: allLeads, updateLead } = useLeads()
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [overColumn, setOverColumn] = useState<LeadStatus | null>(null)
+  const [isTouch, setIsTouch] = useState(false)
   const dragLeadId = useRef<string | null>(null)
 
+  useEffect(() => {
+    setIsTouch(window.matchMedia("(pointer: coarse)").matches)
+  }, [])
+
+  const leads = allLeads.filter((l) => clientId ? l.client_id === clientId : true)
+
   function moveToStatus(leadId: string, newStatus: LeadStatus) {
-    setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, status: newStatus, updated_at: new Date().toISOString() } : l))
-    const idx = mockLeads.findIndex((l) => l.id === leadId)
-    if (idx !== -1) mockLeads[idx].status = newStatus
+    updateLead(leadId, { status: newStatus })
     toast.success(`Lead movido para "${LEAD_STATUS_LABELS[newStatus]}"`)
   }
 
@@ -65,7 +68,6 @@ export default function LeadsKanbanPage() {
   }
 
   function handleDragLeave(e: React.DragEvent) {
-    // Only clear if leaving the column entirely (not entering a child)
     const related = e.relatedTarget as Node | null
     if (!(e.currentTarget as HTMLElement).contains(related)) {
       setOverColumn(null)
@@ -77,9 +79,7 @@ export default function LeadsKanbanPage() {
     const id = dragLeadId.current ?? e.dataTransfer.getData("text/plain")
     if (!id) return
     const lead = leads.find((l) => l.id === id)
-    if (lead && lead.status !== status) {
-      moveToStatus(id, status)
-    }
+    if (lead && lead.status !== status) moveToStatus(id, status)
     setOverColumn(null)
     setDraggingId(null)
   }
@@ -89,7 +89,10 @@ export default function LeadsKanbanPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Kanban Comercial</h1>
-          <p className="text-gray-500 mt-1">{leads.length} leads no funil · Arraste os cards para mover</p>
+          <p className="text-gray-500 mt-1">
+            {leads.length} leads no funil
+            {isTouch ? " · Selecione a coluna para mover" : " · Arraste os cards para mover"}
+          </p>
         </div>
         <Link href="/client/leads/new">
           <Button size="sm">+ Novo Lead</Button>
@@ -117,19 +120,48 @@ export default function LeadsKanbanPage() {
                 {colLeads.map((lead) => (
                   <div
                     key={lead.id}
-                    draggable
+                    draggable={!isTouch}
                     onDragStart={(e) => handleDragStart(e, lead.id)}
                     onDragEnd={handleDragEnd}
-                    className={`bg-white rounded-lg border border-gray-200 p-3 shadow-sm cursor-grab active:cursor-grabbing select-none transition-opacity duration-150 ${draggingId === lead.id ? "opacity-40 scale-95" : "opacity-100"}`}
+                    className={`bg-white rounded-lg border border-gray-200 p-3 shadow-sm transition-opacity duration-150 ${
+                      !isTouch ? "cursor-grab active:cursor-grabbing select-none" : ""
+                    } ${draggingId === lead.id ? "opacity-40 scale-95" : "opacity-100"}`}
                   >
                     <Link href={`/client/leads/${lead.id}`} className="block" onClick={(e) => draggingId && e.preventDefault()}>
                       <p className="font-medium text-sm text-gray-900 hover:text-blue-600 truncate">{lead.name}</p>
-                      {lead.phone && <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5"><Phone className="h-3 w-3" />{lead.phone}</p>}
+                      {lead.phone && (
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <Phone className="h-3 w-3" aria-hidden="true" />{lead.phone}
+                        </p>
+                      )}
                       {lead.product_interest && <p className="text-xs text-gray-400 mt-0.5">🎯 {lead.product_interest}</p>}
                       {lead.origin && <p className="text-xs text-gray-400 mt-0.5">📍 {lead.origin}</p>}
                       {lead.responsible_name && <p className="text-xs text-gray-400 mt-0.5">👤 {lead.responsible_name}</p>}
                       {lead.sale_value && <p className="text-xs font-semibold text-emerald-600 mt-1">R$ {lead.sale_value.toLocaleString("pt-BR")}</p>}
                     </Link>
+
+                    {/* Touch fallback: column selector */}
+                    {isTouch && (
+                      <div className="mt-2">
+                        <label className="sr-only" htmlFor={`move-${lead.id}`}>Mover para</label>
+                        <select
+                          id={`move-${lead.id}`}
+                          defaultValue=""
+                          className="w-full text-xs border border-gray-200 rounded px-2 py-1 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              moveToStatus(lead.id, e.target.value as LeadStatus)
+                              e.target.value = ""
+                            }
+                          }}
+                        >
+                          <option value="">→ Mover para...</option>
+                          {LEAD_STATUS_KANBAN.filter((s) => s !== status).map((s) => (
+                            <option key={s} value={s}>{LEAD_STATUS_LABELS[s]}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 ))}
 

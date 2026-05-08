@@ -1,13 +1,14 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { Users, TrendingUp, DollarSign, AlertTriangle, CheckCircle2, XCircle, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PieChart } from "@/components/charts/pie-chart"
 import { BarChart } from "@/components/charts/bar-chart"
-import { mockLeads } from "@/lib/mock-data"
+import { DateRangePicker } from "@/components/ui/date-range-picker"
+import { useLeads } from "@/lib/leads-context"
 import { useSessionUser } from "@/hooks/use-session-user"
 import { LEAD_STATUS_LABELS, LOSS_REASON_LABELS, QUALIFICATION_LABELS } from "@/lib/leads"
 
@@ -21,7 +22,7 @@ function MetricBox({ label, value, sub, color = "text-gray-900", icon: Icon }: {
             <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
             {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
           </div>
-          {Icon && <Icon className="h-5 w-5 text-gray-300" />}
+          {Icon && <Icon className="h-5 w-5 text-gray-300" aria-hidden="true" />}
         </div>
       </CardContent>
     </Card>
@@ -30,9 +31,21 @@ function MetricBox({ label, value, sub, color = "text-gray-900", icon: Icon }: {
 
 export default function SalesDashboardPage() {
   const { user } = useSessionUser()
+  const { leads: allLeads } = useLeads()
   const clientId = user?.clientId
 
-  const leads = mockLeads.filter((l) => clientId ? l.client_id === clientId : true)
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+
+  const leads = useMemo(() => {
+    return allLeads.filter((l) => {
+      if (clientId && l.client_id !== clientId) return false
+      if (startDate && l.created_at < startDate) return false
+      if (endDate && l.created_at > endDate + "T23:59:59") return false
+      return true
+    })
+  }, [allLeads, clientId, startDate, endDate])
+
   const total = leads.length
   const sales = leads.filter((l) => l.status === "venda_realizada")
   const lost = leads.filter((l) => l.status === "perdido" || l.status === "desqualificado")
@@ -42,34 +55,78 @@ export default function SalesDashboardPage() {
   const convRate = total > 0 ? ((sales.length / total) * 100).toFixed(1) : "0"
   const avgTicket = sales.length > 0 ? revenue / sales.length : 0
 
-  // By origin
-  const originMap: Record<string, number> = {}
-  leads.forEach((l) => { if (l.origin) originMap[l.origin] = (originMap[l.origin] ?? 0) + 1 })
-  const originData = Object.entries(originMap).map(([name, value], i) => ({ name, value, color: ["#3b82f6","#10b981","#f59e0b","#8b5cf6","#ec4899","#6b7280"][i % 6] }))
+  const noResponsible = useMemo(() => leads.filter((l) => !l.responsible_name).length, [leads])
 
-  // By responsible
-  const respMap: Record<string, { leads: number; sales: number }> = {}
-  leads.forEach((l) => {
-    const r = l.responsible_name ?? "Sem responsável"
-    if (!respMap[r]) respMap[r] = { leads: 0, sales: 0 }
-    respMap[r].leads++
-    if (l.status === "venda_realizada") respMap[r].sales++
-  })
-  const respData = Object.entries(respMap).map(([name, v]) => ({ name, leads: v.leads, sales: v.sales }))
+  const originData = useMemo(() => {
+    const map: Record<string, number> = {}
+    leads.forEach((l) => { if (l.origin) map[l.origin] = (map[l.origin] ?? 0) + 1 })
+    return Object.entries(map).map(([name, value], i) => ({ name, value, color: ["#3b82f6","#10b981","#f59e0b","#8b5cf6","#ec4899","#6b7280"][i % 6] }))
+  }, [leads])
 
-  // Loss reasons
-  const lossMap: Record<string, number> = {}
-  lost.forEach((l) => { if (l.loss_reason) lossMap[LOSS_REASON_LABELS[l.loss_reason]] = (lossMap[LOSS_REASON_LABELS[l.loss_reason]] ?? 0) + 1 })
-  const lossData = Object.entries(lossMap).map(([name, value]) => ({ name, value }))
+  const respData = useMemo(() => {
+    const map: Record<string, { leads: number; sales: number }> = {}
+    leads.forEach((l) => {
+      const r = l.responsible_name ?? "Sem responsável"
+      if (!map[r]) map[r] = { leads: 0, sales: 0 }
+      map[r].leads++
+      if (l.status === "venda_realizada") map[r].sales++
+    })
+    return Object.entries(map).map(([name, v]) => ({ name, leads: v.leads, sales: v.sales }))
+  }, [leads])
+
+  const lossData = useMemo(() => {
+    const map: Record<string, number> = {}
+    lost.forEach((l) => { if (l.loss_reason) map[LOSS_REASON_LABELS[l.loss_reason]] = (map[LOSS_REASON_LABELS[l.loss_reason]] ?? 0) + 1 })
+    return Object.entries(map).map(([name, value]) => ({ name, value }))
+  }, [lost])
+
+  const hasPeriodFilter = !!(startDate || endDate)
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Central Comercial</h1>
-          <p className="text-gray-500 mt-1">Visão geral de leads e vendas</p>
+          <p className="text-gray-500 mt-1">
+            {hasPeriodFilter ? `${total} leads no período selecionado` : "Visão geral de leads e vendas"}
+          </p>
         </div>
-        <Link href="/client/leads/new"><Button size="sm">+ Novo Lead</Button></Link>
+        <div className="flex items-center gap-3">
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(s, e) => { setStartDate(s); setEndDate(e) }}
+          />
+          {hasPeriodFilter && (
+            <button
+              onClick={() => { setStartDate(""); setEndDate("") }}
+              className="text-xs text-gray-500 hover:text-gray-700 underline whitespace-nowrap"
+            >
+              Limpar período
+            </button>
+          )}
+          <Link href="/client/leads/new"><Button size="sm">+ Novo Lead</Button></Link>
+        </div>
+      </div>
+
+      {/* Alertas */}
+      <div className="space-y-2 mb-6">
+        {noResponse.length > 3 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" aria-hidden="true" />
+            <p className="text-sm text-amber-700">
+              <strong>{noResponse.length} leads sem resposta</strong> — Atenção imediata necessária. Atribua responsáveis e inicie o atendimento.
+            </p>
+          </div>
+        )}
+        {noResponsible > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+            <XCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" aria-hidden="true" />
+            <p className="text-sm text-red-700">
+              <strong>{noResponsible} {noResponsible === 1 ? "lead sem responsável" : "leads sem responsável"}</strong> — Atribua um responsável para não perder esses contatos.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* KPIs */}
@@ -85,16 +142,6 @@ export default function SalesDashboardPage() {
         <MetricBox label="Sem Resposta" value={noResponse.length} color="text-orange-500" icon={Clock} />
         <MetricBox label="Ticket Médio" value={avgTicket > 0 ? `R$ ${avgTicket.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"} icon={DollarSign} />
       </div>
-
-      {/* Alertas */}
-      {noResponse.length > 3 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-          <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-amber-700">
-            <strong>{noResponse.length} leads sem resposta</strong> — Atenção imediata necessária. Atribua responsáveis e inicie o atendimento.
-          </p>
-        </div>
-      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -180,6 +227,15 @@ export default function SalesDashboardPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {total === 0 && hasPeriodFilter && (
+        <div className="text-center py-16 text-gray-400">
+          <p className="text-lg font-medium text-gray-600">Nenhum lead no período selecionado</p>
+          <button onClick={() => { setStartDate(""); setEndDate("") }} className="text-sm text-blue-600 hover:underline mt-2">
+            Limpar filtro de período
+          </button>
+        </div>
       )}
     </div>
   )

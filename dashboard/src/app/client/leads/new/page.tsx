@@ -10,13 +10,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { useLeads } from "@/lib/leads-context"
 import { useSessionUser } from "@/hooks/use-session-user"
 import { LEAD_ORIGINS } from "@/lib/leads"
-import { mockLeads, mockUsers } from "@/lib/mock-data"
+import { mockUsers } from "@/lib/mock-data"
+
+function maskPhone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11)
+  if (digits.length <= 2) return digits.length ? `(${digits}` : ""
+  if (digits.length <= 7) return `(${digits.slice(0,2)}) ${digits.slice(2)}`
+  return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`
+}
 
 export default function NewLeadPage() {
   const router = useRouter()
   const { user } = useSessionUser()
+  const { addLead } = useLeads()
   const [loading, setLoading] = useState(false)
   const clientId = user?.clientId ?? "c1"
 
@@ -31,20 +40,23 @@ export default function NewLeadPage() {
     setForm((f) => ({ ...f, [field]: value }))
   }
 
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    set("phone", maskPhone(e.target.value))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name.trim()) { toast.error("Nome é obrigatório"); return }
     setLoading(true)
     await new Promise((r) => setTimeout(r, 600))
-    const newLead = {
+    addLead({
       id: `l${Date.now()}`,
       client_id: clientId,
       status: "novo" as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...form,
-    }
-    mockLeads.push(newLead)
+    })
     toast.success("Lead cadastrado com sucesso")
     router.push("/client/leads")
     setLoading(false)
@@ -68,21 +80,21 @@ export default function NewLeadPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="name">Nome *</Label>
-                    <Input id="name" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Nome completo" required />
+                    <Input id="name" value={form.name} disabled={loading} onChange={(e) => set("name", e.target.value)} placeholder="Nome completo" required />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="phone">Telefone</Label>
-                    <Input id="phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="(11) 99999-9999" />
+                    <Input id="phone" type="tel" value={form.phone} disabled={loading} onChange={handlePhoneChange} placeholder="(11) 99999-9999" inputMode="numeric" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="email@exemplo.com" />
+                    <Input id="email" type="email" value={form.email} disabled={loading} onChange={(e) => set("email", e.target.value)} placeholder="email@exemplo.com" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="product_interest">Serviço de Interesse</Label>
-                    <Input id="product_interest" value={form.product_interest} onChange={(e) => set("product_interest", e.target.value)} placeholder="Ex: Botox, Matrícula..." />
+                    <Input id="product_interest" value={form.product_interest} disabled={loading} onChange={(e) => set("product_interest", e.target.value)} placeholder="Ex: Botox, Matrícula..." />
                   </div>
                 </div>
               </CardContent>
@@ -93,25 +105,25 @@ export default function NewLeadPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Origem</Label>
-                    <select value={form.origin} onChange={(e) => set("origin", e.target.value)} className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <Label htmlFor="origin">Origem</Label>
+                    <select id="origin" value={form.origin} disabled={loading} onChange={(e) => set("origin", e.target.value)} className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
                       <option value="">Selecionar origem</option>
                       {LEAD_ORIGINS.map((o) => <option key={o} value={o}>{o}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="campaign">Campanha</Label>
-                    <Input id="campaign" value={form.campaign} onChange={(e) => set("campaign", e.target.value)} placeholder="Nome da campanha" />
+                    <Input id="campaign" value={form.campaign} disabled={loading} onChange={(e) => set("campaign", e.target.value)} placeholder="Nome da campanha" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="ad_set">Conjunto</Label>
-                    <Input id="ad_set" value={form.ad_set} onChange={(e) => set("ad_set", e.target.value)} placeholder="Nome do conjunto" />
+                    <Input id="ad_set" value={form.ad_set} disabled={loading} onChange={(e) => set("ad_set", e.target.value)} placeholder="Nome do conjunto" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="ad">Anúncio</Label>
-                    <Input id="ad" value={form.ad} onChange={(e) => set("ad", e.target.value)} placeholder="Nome do anúncio" />
+                    <Input id="ad" value={form.ad} disabled={loading} onChange={(e) => set("ad", e.target.value)} placeholder="Nome do anúncio" />
                   </div>
                 </div>
               </CardContent>
@@ -122,24 +134,24 @@ export default function NewLeadPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Responsável</Label>
-                    <select value={form.responsible_name} onChange={(e) => set("responsible_name", e.target.value)} className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <Label htmlFor="responsible">Responsável</Label>
+                    <select id="responsible" value={form.responsible_name} disabled={loading} onChange={(e) => set("responsible_name", e.target.value)} className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
                       <option value="">Sem responsável</option>
                       {employees.map((e) => <option key={e.id} value={e.name}>{e.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="next_action_date">Data da Próxima Ação</Label>
-                    <Input id="next_action_date" type="date" value={form.next_action_date} onChange={(e) => set("next_action_date", e.target.value)} />
+                    <Input id="next_action_date" type="date" value={form.next_action_date} disabled={loading} onChange={(e) => set("next_action_date", e.target.value)} />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="next_action">Próxima Ação</Label>
-                  <Input id="next_action" value={form.next_action} onChange={(e) => set("next_action", e.target.value)} placeholder="Ex: Ligar e agendar avaliação" />
+                  <Input id="next_action" value={form.next_action} disabled={loading} onChange={(e) => set("next_action", e.target.value)} placeholder="Ex: Ligar e agendar avaliação" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="notes">Observações</Label>
-                  <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Anotações sobre o lead..." rows={3} />
+                  <Textarea id="notes" value={form.notes} disabled={loading} onChange={(e) => set("notes", e.target.value)} placeholder="Anotações sobre o lead..." rows={3} />
                 </div>
               </CardContent>
             </Card>
@@ -149,7 +161,7 @@ export default function NewLeadPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Salvando...</> : <><Save className="h-4 w-4" />Cadastrar Lead</>}
             </Button>
-            <Button type="button" variant="outline" className="w-full" asChild>
+            <Button type="button" variant="outline" className="w-full" disabled={loading} asChild>
               <Link href="/client/leads">Cancelar</Link>
             </Button>
           </div>

@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { useSessionUser } from "@/hooks/use-session-user"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +27,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <Sidebar role="admin" userName={user.name ?? ""} />
       <main className="flex-1 overflow-y-auto bg-gray-50">
         <div className="p-4 pt-16 lg:p-8 max-w-screen-2xl mx-auto">
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </div>
       </main>
     </div>
